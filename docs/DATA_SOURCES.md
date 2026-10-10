@@ -7,7 +7,7 @@
 | **Tesseract language data** (`tessdata_fast`: uzb, uzb_cyrl, rus, eng) | receipt OCR in the browser | Apache 2.0 | https://github.com/tesseract-ocr/tessdata_fast |
 | tesseract.js 6, tesseract.js-core | OCR runtime (self-hosted in `apps/web/public/tesseract`) | Apache 2.0 | https://github.com/naptha/tesseract.js |
 | pdf.js (pdfjs-dist 4) | PDF text extraction with coordinates | Apache 2.0 | https://github.com/mozilla/pdf.js |
-| SheetJS (xlsx 0.18.5) | XLSX/CSV parsing | Apache 2.0 | https://sheetjs.com |
+| SheetJS CE 0.20.3 (npm alias `@e965/xlsx`, automated republish of the vendor build) | XLSX/CSV parsing | Apache 2.0 | https://sheetjs.com · https://github.com/e965/sheetjs-npm-publisher |
 | Next.js 16, React 19 | application | MIT | https://nextjs.org |
 | XGBoost | risk model training | Apache 2.0 | https://xgboost.ai |
 | scikit-learn, NumPy, pandas | training and evaluation | BSD-3 | — |

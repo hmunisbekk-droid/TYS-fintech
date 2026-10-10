@@ -51,7 +51,7 @@ deck/            defence deck
 cd apps/web
 npm ci
 npm run dev          # http://localhost:3000
-npm test             # vitest: feature parity with Python, rule engine, parsers, memo verifier (also writes public/model/categorizer_eval.json)
+npm test             # vitest: feature parity with Python, rule engine, parsers (incl. a real two-date-column PDF via pdf.js), memo verifier (writes public/model/categorizer_eval.json and ood_eval.json)
 npm run build        # static export to apps/web/out
 ```
 
@@ -92,7 +92,8 @@ and export the case with its audit chain.
 |---|---|---|
 | Statement parsing, 60 synthetic PDFs (2 layouts, RU/UZ labels) | row count exact on 60/60, balance chain reconciles on 60/60, ~1.6 s per 12-month PDF | `public/model/statement_eval.json` |
 | Tamper detection (inflated inflow, deleted debit, duplicated row, window dressing) | 40/40 caught (10/10 per type); 0 false positives on the 60 clean statements | `public/model/statement_eval.json` |
-| **Unseen layouts** (signed-amount RU CSV, Kirim/Chiqim XLSX, quoted EN CSV + Type column, Unicode-minus CSV, headerless CSV, Приход/Расход TSV, Payme-style wallet export with +/− type column, status column and no balance) | 7/7 exact row counts and credit/debit totals | `public/model/ood_eval.json` (written by `tests/ood.test.ts`) |
+| **Unseen layouts** (signed-amount RU CSV, Kirim/Chiqim XLSX, quoted EN CSV + Type column, Unicode-minus CSV, headerless CSV, Приход/Расход TSV, Payme-style wallet export with +/− type column, status column and no balance, RU bank CSV with two date columns + document-number and account columns) | 8/8 exact row counts and credit/debit totals | `public/model/ood_eval.json` (written by `tests/ood.test.ts`) |
+| **Two-date-column bank PDF** (Дата операции / Дата проводки, № документа, 20-digit correspondent account, header and descriptions wrapped over two lines; 25 pages, 1,346 rows) | rows and totals exact, operation date kept on every row, balance chain intact | `tests/pdf_layout.test.ts` on `tests/fixtures/statement_twodate.pdf` (+ CSV twin) |
 | Receipt OCR on 60 camera-augmented photos (uzb+rus+eng, in-browser) | total 95%, INN 100%, date 97%, receipt № 98%, 1.6 s each | `public/model/ocr_eval.json` |
 | Transaction categoriser vs ground truth (10,481 synthetic lines) | 99.96% (synthetic vocabulary — will be lower on real data) | `public/model/categorizer_eval.json` |
 | Risk model, synthetic holdout (n=500) | ROC-AUC 0.965, PR-AUC 0.76, Brier 0.042; logistic 0.963; ПДН alone 0.948 | `public/model/metrics.json` |
@@ -114,9 +115,10 @@ CBU regulation texts are public legal information (lex.uz).
 
 ## Known items
 
-- `xlsx` (SheetJS) is pinned at 0.18.5, the last version on the npm registry, which carries two advisories (prototype pollution, ReDoS) in the CSV/XLSX reader. The fix is the vendor build: `cd apps/web && npm install https://cdn.sheetjs.com/xlsx-0.20.3/xlsx-0.20.3.tgz` — same API. Our build environment could not reach cdn.sheetjs.com, so this is done on a developer machine before the pilot; in production uploads are parsed inside the bank's perimeter only.
+- `xlsx` resolves to SheetJS CE **0.20.3** through the npm alias `xlsx@npm:@e965/xlsx@0.20.3` (an automated, Apache-2.0 republish of the vendor build, because SheetJS stopped publishing to the npm registry at 0.18.5, which carried two advisories). `npm audit --omit=dev` is clean. If cdn.sheetjs.com is reachable, the official tarball is a drop-in: `npm install https://cdn.sheetjs.com/xlsx-0.20.3/xlsx-0.20.3.tgz`.
 - BRV is a configuration constant (`apps/web/lib/rules/pdn.ts`, `synth/archetypes.py`): 440,000 UZS from 1 Sep 2026.
 - Lender type (section 1 of the case page) defaults to **bank**: no small-loan exclusion, the ratio is computed for every application and the bank-level 15% quota is shown as a note. The 50-BRV (MFO/pawnshop) and 75-BRV (MFO + self-employed) exclusions apply only when the lender type is changed.
+- Statements with several date columns (operation date / posting date) use the **first** date column; later date columns are never read as amounts. Digit-only identifiers of 12+ digits (accounts, cards) are never amounts; numeric columns are mapped to debit/credit/balance by header column boundaries, so document-number and code columns stay out of the totals. Engine versions (`rules`, `parsers`, `categorizer`, `model`) are written into every audit entry and bumped on every rule or parser change.
 - Statements whose rows carry no debit/credit, type or balance information are counted as inflows and raise a high-severity integrity finding ("Transaction direction is determinable"), which sends the case to the committee instead of approving on inflated income.
 - Scanned statements without a text layer are not OCR'd page by page (use the XLSX/CSV export).
 

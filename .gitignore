@@ -17,3 +17,6 @@ apps/web/*.tsbuildinfo
 
 # delivery archive, not part of the repo
 *.zip
+
+# desktop-app delivery folder
+Claude outputs/
