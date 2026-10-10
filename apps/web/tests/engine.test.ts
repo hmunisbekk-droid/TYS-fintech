@@ -157,3 +157,25 @@ describe("end-to-end case on fixture + memo verifier", () => {
     expect(s.regulatoryIncome.length).toBe(12);
   });
 });
+
+describe("memo verifier sweep — every scenario must verify", () => {
+  it("verifies across amounts, terms, products and borrowers (incl. 50-BRV exemption, family programme, refer/decline)", () => {
+    const products = ["ommabop", "express", "business_online", "family_program"] as const;
+    const amounts = [3_000_000, 15_000_000, 25_000_000, 60_000_000, 100_000_000];
+    const terms = [12, 36, 60];
+    const failures: string[] = [];
+    let n = 0;
+    for (const fx of fixture) {
+      const doc: ParsedDocument = { id: "d1", fileName: "statement.pdf", kind: "statement", mime: "application/pdf", pages: 10, holderName: "TEST HOLDER",
+        transactions: fx.transactions.map(toTx).map((t) => ({ ...t, category: "unknown" as const })), fields: [], warnings: [], parseMs: 1 };
+      for (const product of products) for (const amount of amounts) for (const term of terms) {
+        n++;
+        const res = runCase({ applicationDate: fx.application_date, documents: [doc], existingLoans: fx.loans.map(toLoan),
+          request: { amount, term_months: term, annual_rate: product === "family_program" ? 0.14 : 0.28, product } }, model, stats);
+        if (!res.memo.verification.ok) failures.push(`${fx.borrower_id} ${product} ${amount} ${term}: ${res.memo.verification.unsourced.join(",")} | ${res.recommendation}`);
+      }
+    }
+    expect(failures, failures.slice(0, 5).join("\n")).toEqual([]);
+    expect(n).toBe(300);
+  });
+});

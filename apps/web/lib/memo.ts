@@ -95,9 +95,14 @@ export function buildMemo(a: { inp: CaseInput; months: string[]; series: Monthly
 
   // 6. Recommendation
   F("months_observed", a.features.months_observed, String(a.features.months_observed), stmtSrc);
+  // exemption facts (cl.2 small-loan threshold, cl.11) so the reasons text verifies
+  F("brv", a.pdn.brv, fmtUZS(a.pdn.brv), "cl.2 (BRV)");
+  F("brv_multiple", 50, "50", "cl.2");
+  F("brv_threshold", 50 * a.pdn.brv, fmtUZS(50 * a.pdn.brv), "cl.2");
+  if (a.pdn.exemptReason) F("exempt_reason", a.pdn.exemptReason, a.pdn.exemptReason, a.pdn.exemptCitation ?? "rules");
   const p6: MemoSection = { title: "6. Recommendation", paragraphs: [] };
   p6.paragraphs.push({ text: `${recLabel[a.recommendation]}. ${a.reasons.join(" ")}`, sources: ["rules", "model", "integrity"] });
-  p6.paragraphs.push({ text: "Decision rests with the loan officer / credit committee. This memo is advisory and every figure above links to its source document line.", sources: [] });
+  p6.paragraphs.push({ text: "Decision rests with the loan officer / credit committee. This memo is advisory; every figure above traces to its source (statement lines, a regulation clause, or the model).", sources: [] });
   sections.push(p6);
 
   const memo: Memo = { title: `Credit memo — ${name}`, generatedAt: new Date().toISOString(), sections, facts, verification: { ok: true, numbersChecked: 0, unsourced: [] } };

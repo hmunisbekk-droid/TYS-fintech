@@ -93,7 +93,7 @@ export function runCase(inp: CaseInput, model: RiskModel, stats: FeatureStats): 
   else if (!pdn.passes) {
     rec = pdn.maxAffordableAmount > 0 ? "approve_reduced" : "decline";
     reasons.push(`ПДН ${fmtPct(pdn.ratio)} exceeds the ${fmtPct(pdn.cap)} cap (cl.10). Maximum affordable amount at this term: ${fmtUZS(pdn.maxAffordableAmount)}.`);
-  } else if (band.band === "high") { rec = "refer"; reasons.push(`Risk score ${(probability * 100).toFixed(0)}% — above the referral threshold; committee review.`); }
+  } else if (band.band === "high") { rec = "refer"; reasons.push(`Risk score ${fmtPct(probability)} — above the referral threshold; committee review.`); }
   else if (band.band === "medium" || medFails.length) { rec = "approve"; reasons.push(medFails.length ? `Approve with conditions: ${medFails.map((c) => c.title).join("; ")}.` : "Elevated risk score: approve with standard monitoring."); }
   else { rec = "approve"; reasons.push("ПДН within cap, low risk score, no integrity findings."); }
   if (pdn.exempt) reasons.push(`ПДН cap not applicable: ${pdn.exemptReason} (${pdn.exemptCitation}).`);
