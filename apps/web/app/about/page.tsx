@@ -46,10 +46,6 @@ export default function About() {
         </tbody></table></div>
       </div>
 
-      <div className="card">
-        <h2>Team TYS</h2>
-        <p className="small">Three members. Technical lead — pipeline, model, deployment. Research and data — regulation mapping, synthetic-data calibration, evaluation. Compliance and business case — ПДН rules, data-protection design, pilot budget and ROI, deck.</p>
-      </div>
     </main>
   );
 }

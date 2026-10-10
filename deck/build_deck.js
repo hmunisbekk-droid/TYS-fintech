@@ -46,7 +46,7 @@ async function icon(name, color, size = 256) {
 pres.defineSlideMaster({ title: "DARK", background: { color: HEX.dk2 },
   objects: [{ placeholder: { options: { name: "title", type: "title", x: 0.7, y: 2.3, w: 11.9, h: 1.4, fontSize: 44, bold: true, color: HEX.lt1, margin: 0 }, text: "" } },
     { placeholder: { options: { name: "body", type: "body", x: 0.7, y: 3.8, w: 11.9, h: 2.4, fontSize: 18, color: HEX.lt2, margin: 0 }, text: "" } },
-    { text: { text: "Daromad · team TYS · FinTech / AI in Finance", options: { x: 0.7, y: 7.0, w: 8, h: 0.3, fontSize: 10, color: HEX.accent6, margin: 0 } } }] });
+    { text: { text: "team TYS · FinTech / AI in Finance", options: { x: 0.7, y: 7.0, w: 8, h: 0.3, fontSize: 10, color: HEX.accent6, margin: 0 } } }] });
 pres.defineSlideMaster({ title: "CONTENT", background: { color: HEX.lt1 },
   objects: [{ placeholder: { options: { name: "title", type: "title", x: 0.6, y: 0.4, w: 12.1, h: 0.9, fontSize: 28, bold: true, color: HEX.dk2, margin: 0, valign: "top", align: "left" }, text: "" } },
     { text: { text: "Daromad · team TYS", options: { x: 0.6, y: 7.05, w: 4, h: 0.3, fontSize: 9, color: HEX.accent4, margin: 0 } } }],
@@ -87,15 +87,13 @@ const pct = (v, d = 1) => (v * 100).toFixed(d) + "%";
   // 1 — title
   pres.addSection({ title: "Opening" });
   let s = slide("DARK", "Opening", null);
-  s.addText("Daromad", { x: 0.7, y: 1.5, w: 8, h: 1.2, fontSize: 60, bold: true, color: HEX.lt1, margin: 0, isTextBox: true, objectName: "brand" });
-  s.addText("Income evidence for borrowers who have no payslip", { x: 0.7, y: 2.7, w: 11, h: 0.8, fontSize: 28, color: HEX.lt2, margin: 0, isTextBox: true, objectName: "tagline" });
-  s.addShape(pres.ShapeType.roundRect, { x: 0.7, y: 3.8, w: 7.6, h: 0.6, fill: { color: HEX.accent2 }, line: { color: HEX.accent2 }, rectRadius: 0.1, objectName: "mode pill" });
-  s.addText("Mode: Partner product — MKBANK, micro & family-business credit department", { x: 0.85, y: 3.8, w: 7.4, h: 0.6, fontSize: 15, bold: true, color: HEX.dk1, margin: 0, isTextBox: true, valign: "middle", objectName: "mode" });
-  s.addText([{ text: "Team TYS  ", options: { bold: true } }, { text: "three members — technical lead · research & data · compliance & business case" }],
-    { x: 0.7, y: 4.7, w: 11.5, h: 0.5, fontSize: 15, color: HEX.lt2, margin: 0, isTextBox: true, objectName: "team" });
+  s.addText("Team TYS", { x: 0.7, y: 1.6, w: 11, h: 1.2, fontSize: 60, bold: true, color: HEX.lt1, margin: 0, isTextBox: true, objectName: "team name" });
+  s.addText("FinTech / AI in Finance · final defence", { x: 0.7, y: 2.8, w: 11, h: 0.7, fontSize: 26, color: HEX.lt2, margin: 0, isTextBox: true, objectName: "event" });
+  s.addShape(pres.ShapeType.roundRect, { x: 0.7, y: 3.9, w: 7.6, h: 0.6, fill: { color: HEX.accent2 }, line: { color: HEX.accent2 }, rectRadius: 0.1, objectName: "mode pill" });
+  s.addText("Mode: Partner product — MKBANK, micro & family-business credit department", { x: 0.85, y: 3.9, w: 7.4, h: 0.6, fontSize: 15, bold: true, color: HEX.dk1, margin: 0, isTextBox: true, valign: "middle", objectName: "mode" });
+  s.addText("Partners: MKBANK and the Central Bank of Uzbekistan · October 2026", { x: 0.7, y: 4.9, w: 11.5, h: 0.4, fontSize: 14, color: HEX.lt2, margin: 0, isTextBox: true, objectName: "partners" });
   s.addText([{ text: "Live prototype  ", options: { bold: true } }, { text: SITE + "    " }, { text: "Repository  ", options: { bold: true } }, { text: REPO }],
-    { x: 0.7, y: 5.3, w: 12, h: 0.5, fontSize: 13, color: HEX.accent6, margin: 0, isTextBox: true, objectName: "links" });
-  s.addText("FinTech / AI in Finance · partners MKBANK and the Central Bank of Uzbekistan · final defence, October 2026", { x: 0.7, y: 6.3, w: 11.5, h: 0.4, fontSize: 12, color: HEX.accent6, margin: 0, isTextBox: true, objectName: "event" });
+    { x: 0.7, y: 5.5, w: 12, h: 0.5, fontSize: 13, color: HEX.accent6, margin: 0, isTextBox: true, objectName: "links" });
 
   // 2 — the clause-9 slide
   pres.addSection({ title: "Problem" });

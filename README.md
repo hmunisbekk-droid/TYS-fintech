@@ -129,8 +129,4 @@ CBU regulation texts are public legal information (lex.uz).
 - All code in this repository was written during the final by team TYS with LLM coding assistance (declared); third-party libraries are listed with licences.
 - Deployment is from this repository (Vercel Git integration); CI runs tests and the build on every push.
 
-## Team
-
-Three members. Technical lead — pipeline, model, deployment · Research and data — regulation mapping, synthetic-data calibration, evaluation · Compliance and business case — ПДН rules, data-protection design, pilot budget and ROI, deck.
-
 MIT License — see `LICENSE`.
