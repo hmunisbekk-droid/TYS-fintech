@@ -65,14 +65,20 @@ export default function CasePage() {
   }, [model, stats, docs, appDate, applicant, loans, request, coIncome]);
 
   const lastRunHash = useRef("");
+  const logTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   useEffect(() => {
     if (!result) return;
     const sig = JSON.stringify({ p: result.probability, r: result.pdn.ratio, rec: result.recommendation, a: request.amount, t: request.term_months, n: result.transactions.length });
     if (sig === lastRunHash.current) return;
-    lastRunHash.current = sig;
-    log.current.append("analysis_run", { features: result.features, pdn: result.pdn.ratio, probability: result.probability, recommendation: result.recommendation, versions: result.engineVersions },
-      `Analysis: ПДН ${fmtPct(result.pdn.ratio)}, PD ${fmtPct(result.probability)}, ${REC_LABEL[result.recommendation].t}`).then(() => setAudit([...log.current.entries]));
-  }, [result, request.amount, request.term_months]);
+    // debounce: a slider drag produces many intermediate results; log the settled one only
+    if (logTimer.current) clearTimeout(logTimer.current);
+    logTimer.current = setTimeout(() => {
+      lastRunHash.current = sig;
+      log.current.append("analysis_run", { features: result.features, pdn: result.pdn.ratio, probability: result.probability, recommendation: result.recommendation, request, versions: result.engineVersions },
+        `Analysis: amount ${fmtUZS(request.amount)}, ПДН ${fmtPct(result.pdn.ratio)}, PD ${fmtPct(result.probability)}, ${REC_LABEL[result.recommendation].t}`).then(() => setAudit([...log.current.entries]));
+    }, 900);
+    return () => { if (logTimer.current) clearTimeout(logTimer.current); };
+  }, [result, request]);
 
   const addFiles = useCallback(async (files: File[]) => {
     for (const f of files) {
@@ -102,18 +108,45 @@ export default function CasePage() {
     await addFiles(files);
   };
   const loadTampered = async (file: string) => {
+    // a tampered sample is a different (synthetic) borrower: always start a fresh case
+    setDocs([]); setLoans([]); setDecision(null); setApplicant(""); setCoIncome(0);
     setAppDate("2026-09-30");
+    setRequest((r) => ({ ...r, amount: 25_000_000, term_months: 24 }));
     const f = await fetchAsFile(`/samples/tampered/${file}`, file);
     await addFiles([f]);
+  };
+  const clearCase = async () => {
+    setDocs([]); setLoans([]); setDecision(null); setApplicant(""); setCoIncome(0); setReason(""); setEvidence(null);
+    setAppDate(today()); setRequest({ amount: 25_000_000, term_months: 24, annual_rate: 0.28, product: "express" });
+    log.current = new AuditLog(); lastRunHash.current = "";
+    await log.current.append("case_created", { ts: Date.now() }, "New case opened in browser");
+    setAudit([...log.current.entries]);
   };
 
   const onDrop = (e: React.DragEvent) => { e.preventDefault(); setOver(false); addFiles([...e.dataTransfer.files]); };
   const removeDoc = (id: string) => setDocs((d) => d.filter((x) => x.id !== id));
   const confirmField = (docId: string, name: string, value: string) => setDocs((d) => d.map((x) => x.id === docId ? { ...x, fields: x.fields.map((f) => f.name === name ? { ...f, value, confidence: 1, needsConfirmation: false } : f) } : x));
   const showEvidence = (ids: string[], title: string) => {
-    const txs = result?.transactions.filter((t) => ids.includes(t.id)) ?? [];
-    const doc = docs.find((d) => ids.some((i) => i.startsWith(d.id + ":") || i === d.id));
-    setEvidence({ title, txs, text: txs.length ? undefined : doc ? `${doc.fileName}\n${doc.textSample ?? ""}` : ids.join(", ") });
+    if (!result) return;
+    const byId = result.transactions.filter((t) => ids.includes(t.id));
+    if (byId.length) { setEvidence({ title, txs: byId }); return; }
+    const doc = docs.find((d) => ids.includes(d.id));
+    if (doc && doc.kind === "statement") {
+      const inWin = result.transactions.filter((t) => t.docId === doc.id && result.months.includes(t.date.slice(0, 7)));
+      setEvidence({ title: `${title} — ${doc.fileName} (${inWin.length} lines in the 12-month window; first 300 shown)`, txs: inWin.slice(0, 300) });
+      return;
+    }
+    if (doc) { setEvidence({ title: `${title} — ${doc.fileName}`, txs: [], text: doc.fields.length ? doc.fields.map((f) => `${f.name}: ${f.value} (confidence ${(f.confidence * 100).toFixed(0)}%, ${f.source})`).join("\n") : doc.textSample ?? "" }); return; }
+    const clause = Object.values(CITATIONS).find((c) => ids.includes(c.id));
+    if (clause) { setEvidence({ title: `${clause.id} — CBU debt-burden regulation`, txs: [], text: clause.text }); return; }
+    const explain: Record<string, string> = {
+      input: "Entered by the officer in section 1 (request, obligations, co-borrower income).",
+      rules: `Deterministic rule engine ${result.engineVersions.rules}: ПДН per cl.1, cl.2, cl.4¹, cl.7, cl.10, cl.11 — see section 3 and the citations on each line.`,
+      model: `Risk model ${result.engineVersions.model}: gradient-boosted trees on 18 cash-flow features; drivers shown in section 4b.`,
+      integrity: "Integrity checks in section 4a; each failed check lists the statement lines it is based on.",
+      "credit-bureau/input": "Existing obligations as entered in section 1 (credit bureau in production).",
+    };
+    setEvidence({ title, txs: [], text: ids.map((i) => explain[i] ?? i).join("\n") });
   };
   const decide = async (action: string) => {
     if (!result) return;
@@ -141,7 +174,7 @@ export default function CasePage() {
           {samples?.samples.map((s) => <button key={s.tag} className="btn small" onClick={() => loadSample(s, s.tag === "C")} title={s.description}>Load sample {s.tag}</button>)}
           {samples && <button className="btn small" onClick={() => loadTampered(samples.tampered[0].file)} title="Statement with one inflated inflow (balance chain breaks)">Load tampered statement</button>}
           {samples && <button className="btn small" onClick={() => loadTampered(samples.tampered[3].file)} title="Statement with inserted round-sum inflows before application">Load window-dressed statement</button>}
-          <button className="btn small" onClick={() => { setDocs([]); setLoans([]); setDecision(null); setApplicant(""); }}>Clear</button>
+          <button className="btn small" onClick={clearCase}>Clear</button>
         </div>
       </div>
       <div className="steps">
@@ -169,7 +202,7 @@ export default function CasePage() {
             <label className="field">Co-borrower income / month<input type="number" step={100_000} value={coIncome} onChange={(e) => setCoIncome(Number(e.target.value))} /></label>
           </div>
           <h3 style={{ marginTop: ".8rem" }}>Existing obligations <span className="muted small">(credit bureau in production; editable here)</span></h3>
-          <table><thead><tr><th>Lender</th><th className="num">Monthly payment</th><th className="num">Term</th><th className="num">Outstanding</th><th className="num">DPD</th><th>Role</th><th></th></tr></thead>
+          <div className="tscroll"><table><thead><tr><th>Lender</th><th className="num">Monthly payment</th><th className="num">Term</th><th className="num">Outstanding</th><th className="num">DPD</th><th>Role</th><th></th></tr></thead>
             <tbody>{loans.map((l, i) => (
               <tr key={l.id}>
                 <td><input value={l.lender} onChange={(e) => setLoans(loans.map((x, j) => j === i ? { ...x, lender: e.target.value } : x))} style={{ width: 140 }} /></td>
@@ -179,7 +212,7 @@ export default function CasePage() {
                 <td className="num"><input type="number" value={l.days_past_due} onChange={(e) => setLoans(loans.map((x, j) => j === i ? { ...x, days_past_due: Number(e.target.value) } : x))} style={{ width: 55 }} /></td>
                 <td><select value={l.role} onChange={(e) => setLoans(loans.map((x, j) => j === i ? { ...x, role: e.target.value as ExistingLoan["role"] } : x))}><option value="borrower">borrower</option><option value="co-borrower">co-borrower</option><option value="guarantor">guarantor</option></select></td>
                 <td><button className="btn small" onClick={() => setLoans(loans.filter((_, j) => j !== i))}>×</button></td>
-              </tr>))}</tbody></table>
+              </tr>))}</tbody></table></div>
           <button className="btn small" style={{ marginTop: ".4rem" }} onClick={() => setLoans([...loans, { id: `m${Date.now()}`, lender: "Lender", monthly_payment: 500_000, term_months: 24, outstanding_principal: 5_000_000, days_past_due: 0, role: "borrower", source: "manual" }])}>+ Add obligation</button>
         </div>
 
@@ -198,13 +231,13 @@ export default function CasePage() {
               </div>
               {d.kind === "statement" && <div className="small">{d.transactions.length} transactions · {d.periodFrom} → {d.periodTo}{d.holderName ? ` · holder ${d.holderName}` : ""}{d.cardMask ? ` · ${d.cardMask}` : ""}</div>}
               {d.fields.length > 0 && (
-                <table style={{ marginTop: ".3rem", tableLayout: "fixed" }}><tbody>{d.fields.map((f) => (
+                <div className="tscroll"><table className="fields" style={{ marginTop: ".3rem" }}><tbody>{d.fields.map((f) => (
                   <tr key={f.name} className={f.needsConfirmation ? "hl" : ""}>
-                    <td style={{ width: 120 }}>{f.name}</td>
-                    <td><input defaultValue={f.value} onBlur={(e) => e.target.value !== f.value && confirmField(d.id, f.name, e.target.value)} style={{ width: "100%" }} /></td>
-                    <td className="num" style={{ width: 70 }}><span className={`tag ${f.confidence >= 0.75 ? "good" : "warn"}`}>{(f.confidence * 100).toFixed(0)}%</span></td>
-                    <td style={{ width: 90 }}>{f.needsConfirmation ? <button className="btn small" onClick={() => confirmField(d.id, f.name, f.value)}>confirm</button> : <span className="muted small">ok</span>}</td>
-                  </tr>))}</tbody></table>
+                    <td className="fname">{f.name}</td>
+                    <td className="fval"><input defaultValue={f.value} onBlur={(e) => e.target.value !== f.value && confirmField(d.id, f.name, e.target.value)} /></td>
+                    <td className="num"><span className={`tag ${f.confidence >= 0.75 ? "good" : "warn"}`}>{(f.confidence * 100).toFixed(0)}%</span></td>
+                    <td>{f.needsConfirmation ? <button className="btn small" onClick={() => confirmField(d.id, f.name, f.value)}>confirm</button> : <span className="muted small">ok</span>}</td>
+                  </tr>))}</tbody></table></div>
               )}
               {d.warnings.map((w, i) => <div key={i} className="small" style={{ color: "var(--warn)" }}>⚠ {w}</div>)}
               {d.textSample && <details><summary className="small">raw text</summary><pre>{d.textSample}</pre></details>}
@@ -230,13 +263,13 @@ export default function CasePage() {
               </div>
               <div>
                 <h3>ПДН — <span className={`tag ${result.pdn.exempt ? "info" : result.pdn.passes ? "good" : "bad"}`}>{result.pdn.exempt ? "cap not applicable" : result.pdn.passes ? "within 50% cap" : "above 50% cap"}</span></h3>
-                <table><tbody>
+                <div className="tscroll"><table><tbody>
                   {result.pdn.existingPayments.map((l, i) => <tr key={i}><td>{l.label} <span className="cite" title={CITATIONS[l.citation].text}>{CITATIONS[l.citation].id}</span>{l.note && <span className="muted small"> {l.note}</span>}</td><td className="num">{fmtUZS(l.value)}</td></tr>)}
                   <tr><td>Requested loan payment <span className="cite" title={CITATIONS.term36.text}>{request.term_months > 36 ? "cl.4¹" : "cl.2"}</span></td><td className="num">{fmtUZS(result.pdn.newPayment)}</td></tr>
                   <tr><th>Total monthly payments</th><th className="num">{fmtUZS(result.pdn.totalPayments)}</th></tr>
                   <tr><td>Income base (12-month mean{coIncome ? " + co-borrower" : ""}) <span className="cite" title={CITATIONS.income12.text}>cl.7</span></td><td className="num">{fmtUZS(result.pdn.incomeBase)}</td></tr>
                   <tr><th>ПДН <span className="cite" title={CITATIONS.cap.text}>cl.10</span></th><th className="num" style={{ fontSize: "1.2rem" }}>{Number.isFinite(result.pdn.ratio) ? fmtPct(result.pdn.ratio) : "n/a"}</th></tr>
-                </tbody></table>
+                </tbody></table></div>
                 <div className="bar cap" style={{ marginTop: ".5rem" }}><i style={{ width: `${Math.min(100, (result.pdn.ratio / 1) * 100)}%`, background: result.pdn.ratio <= 0.5 ? "var(--good)" : "var(--bad)" }} /></div>
                 <div className="small muted">0% ─────────── 50% cap ─────────── 100%</div>
                 {result.pdn.exempt && <p className="small"><span className="tag info">{CITATIONS[result.pdn.exemptCitation!].id}</span> {result.pdn.exemptReason}</p>}
@@ -264,9 +297,9 @@ export default function CasePage() {
               <div className="row"><div className="kpi"><span className="v">{fmtPct(result.probability)}</span><span className="l">probability of default, 12 m (model)</span></div>
                 <div className="kpi"><span className="v">{result.timings.risk.toFixed(1)} ms</span><span className="l">inference + attributions</span></div></div>
               <p className="small muted">Drivers vs. the portfolio median (one-at-a-time attribution). Positive raises risk.</p>
-              <table><tbody>{result.attributions.slice(0, 7).map((a) => (
+              <div className="tscroll"><table><tbody>{result.attributions.slice(0, 7).map((a) => (
                 <tr key={a.feature}><td>{FEATURE_LABELS[a.feature]}</td><td className="num mono small">{a.value.toFixed(2)} <span className="muted">(med {a.reference.toFixed(2)})</span></td>
-                  <td className="num" style={{ color: a.deltaProb > 0 ? "var(--bad)" : "var(--good)", width: 70 }}>{a.deltaProb > 0 ? "+" : ""}{(a.deltaProb * 100).toFixed(1)} pts</td></tr>))}</tbody></table>
+                  <td className="num" style={{ color: a.deltaProb > 0 ? "var(--bad)" : "var(--good)", width: 70 }}>{a.deltaProb > 0 ? "+" : ""}{(a.deltaProb * 100).toFixed(1)} pts</td></tr>))}</tbody></table></div>
               <p className="small muted">Model: gradient-boosted trees with monotone constraints, trained on a declared synthetic population; advisory until retrained on bank history. See <a href="/model">model card</a>.</p>
             </div>
           </div>

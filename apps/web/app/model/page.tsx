@@ -11,6 +11,7 @@ interface Metrics {
 interface Berka { loans_used: number; loans_total: number; bad_rate: number; xgb_auc: number; xgb_pr_auc: number; logreg_auc: number; pdn_only_auc: number; caveat: string; dataset: string }
 interface CatEval { accuracy: number; n: number; confusion: Record<string, number> }
 interface OcrEval { n: number; total_ok_rate: number; inn_ok_rate: number; date_ok_rate: number; receipt_no_ok_rate: number; mean_conf: number; mean_ms: number; note: string }
+interface OodEval { exact_count: number; n: number; layouts: { layout: string; rows: number; rows_truth: number; exact: boolean; warnings: string[] }[]; note: string }
 interface StmtEval { statements: { n: number; rows_exact_rate: number; chain_pass_rate: number; mean_ms: number }; tampered: { n: number; recall: number; by_type: Record<string, { n: number; detected: number }> }; note: string }
 
 const pct = (v: number) => `${(v * 100).toFixed(1)}%`;
@@ -21,7 +22,9 @@ export default function ModelPage() {
   const [c, setC] = useState<CatEval | null>(null);
   const [o, setO] = useState<OcrEval | null>(null);
   const [se, setSe] = useState<StmtEval | null>(null);
+  const [ood, setOod] = useState<OodEval | null>(null);
   useEffect(() => {
+    fetch("/model/ood_eval.json").then((r) => r.json()).then(setOod).catch(() => null);
     fetch("/model/ocr_eval.json").then((r) => r.json()).then(setO).catch(() => null);
     fetch("/model/statement_eval.json").then((r) => r.json()).then(setSe).catch(() => null);
     fetch("/model/metrics.json").then((r) => r.json()).then(setM);
@@ -43,12 +46,12 @@ export default function ModelPage() {
               <div className="kpi"><span className="v">{m.xgb.brier.toFixed(3)}</span><span className="l">Brier score</span></div>
               <div className="kpi"><span className="v">{pct(m.default_rate_test)}</span><span className="l">default rate (test)</span></div>
             </div>
-            <table style={{ marginTop: ".6rem" }}><thead><tr><th>Comparator</th><th className="num">ROC-AUC</th></tr></thead><tbody>
+            <div className="tscroll"><table style={{ marginTop: ".6rem" }}><thead><tr><th>Comparator</th><th className="num">ROC-AUC</th></tr></thead><tbody>
               <tr><td>Gradient-boosted trees, monotone constraints (shipped)</td><td className="num">{m.xgb.auc.toFixed(3)}</td></tr>
               <tr><td>Logistic regression on the same 18 features</td><td className="num">{m.logreg_baseline.auc.toFixed(3)}</td></tr>
               <tr><td>Regulatory ratio alone (ПДН proxy, no model)</td><td className="num">{m.pdn_only_auc.toFixed(3)}</td></tr>
               <tr><td>Train AUC (overfit check)</td><td className="num">{m.xgb.auc_train.toFixed(3)}</td></tr>
-            </tbody></table>
+            </tbody></table></div>
             <h3 style={{ marginTop: ".8rem" }}>Operating points</h3>
             <table><thead><tr><th className="num">threshold</th><th className="num">precision</th><th className="num">recall</th><th className="num">flagged</th></tr></thead><tbody>
               {m.operating_points.map((o) => <tr key={o.threshold}><td className="num">{o.threshold}</td><td className="num">{pct(o.precision)}</td><td className="num">{pct(o.recall)}</td><td className="num">{pct(o.flagged_share)}</td></tr>)}</tbody></table>
@@ -105,6 +108,16 @@ export default function ModelPage() {
             <p className="small muted">{o.note}</p>
           </>) : <p className="muted">run <code>tests/ocr_eval.py</code> to produce this file</p>}
         </div>
+      </div>
+
+      <div className="card">
+        <h2>Unseen statement layouts (out-of-distribution test)</h2>
+        {ood ? (<>
+          <div className="row"><div className="kpi"><span className="v">{ood.exact_count}/{ood.n}</span><span className="l">layouts parsed with exact row count and exact credit/debit totals</span></div></div>
+          <table style={{ marginTop: ".6rem" }}><thead><tr><th>Layout</th><th className="num">rows</th><th>exact</th><th>parser note</th></tr></thead><tbody>
+            {ood.layouts.map((l) => <tr key={l.layout}><td>{l.layout}</td><td className="num">{l.rows}/{l.rows_truth}</td><td><span className={`tag ${l.exact ? "good" : "bad"}`}>{l.exact ? "exact" : "miss"}</span></td><td className="small muted">{l.warnings.join(" ") || "—"}</td></tr>)}</tbody></table>
+          <p className="small muted">{ood.note} Rows are ground truth; the generator never produced these formats, so this is the closest proxy for a jury-supplied statement.</p>
+        </>) : <p className="muted">run <code>npm test</code> to produce this file</p>}
       </div>
 
       <div className="grid2">

@@ -54,9 +54,19 @@ code, .mono { font-family: var(--mono); font-size: .9em; }
 .wrap { max-width: 1180px; margin: 0 auto; padding: 1.2rem 16px 4rem; }
 .card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 1rem 1.1rem; margin-bottom: 1rem; }
 .card h2 { display: flex; align-items: center; gap: .6rem; }
-.grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
-.grid3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; }
-@media (max-width: 860px) { .grid2, .grid3 { grid-template-columns: 1fr; } }
+.grid2 { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 1rem; }
+.grid3 { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1rem; }
+@media (max-width: 860px) { .grid2, .grid3 { grid-template-columns: minmax(0, 1fr); } }
+.tscroll { overflow-x: auto; max-width: 100%; -webkit-overflow-scrolling: touch; }
+.tscroll table { min-width: 100%; }
+table.fields td.fname { width: 7.5rem; white-space: nowrap; }
+table.fields td.fval { min-width: 180px; }
+table.fields td.fval input { width: 100%; min-width: 160px; }
+.card { min-width: 0; }
+.wrap { overflow-x: hidden; }
+.kpi { min-width: 130px; flex: 1 1 130px; }
+label.field input, label.field select { max-width: 100%; }
+@media (max-width: 600px) { .nav { gap: .7rem; flex-wrap: wrap; } .nav .pill { display: none; } .evidence { width: calc(100vw - 32px); right: 16px; } .hero h1 { font-size: 1.6rem; } .steps { display: none; } }
 .row { display: flex; gap: .6rem; flex-wrap: wrap; align-items: center; }
 .btn { display: inline-flex; align-items: center; gap: .4rem; padding: .5rem .9rem; border-radius: 8px; border: 1px solid var(--border); background: var(--surface-2); color: var(--text); font-weight: 600; cursor: pointer; font-size: .92rem; }
 .btn:hover { border-color: var(--accent); }

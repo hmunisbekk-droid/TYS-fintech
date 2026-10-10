@@ -8,7 +8,7 @@ export default function Home() {
         <p className="lead">
           Daromad turns the documents a self-employed or family-business borrower actually has — card and wallet statements,
           fiscal receipts, the Soliq self-employed certificate — into a regulator-compliant 12-month income figure, a debt-burden
-          ratio (ПДН) with every clause cited, an integrity report and a credit memo in which every number links to a document line.
+          ratio (ПДН) with every clause cited, an integrity report and a credit memo in which every number traces to its source — the statement lines behind it, a regulation clause, or the model — and nothing is invented.
         </p>
         <div className="row" style={{ marginTop: "1rem" }}>
           <Link className="btn primary" href="/case">Start a case</Link>

@@ -104,5 +104,18 @@ export function runIntegrityChecks(docs: ParsedDocument[], txs: Transaction[], m
     checks.push({ id: `opening:${d.id}`, title: `Stated opening balance matches first row (${d.fileName})`, severity: "medium",
       passed: Math.abs(implied - d.openingBalance) <= 1, detail: `Stated ${money(d.openingBalance)}, implied ${money(implied)}.`, evidence: first ? [first.id] : [] });
   }
+  // 9. receipts: same tax ID, dates inside the statement window, and business inflows on those days
+  const receipts = docs.filter((d) => d.kind === "receipt");
+  if (receipts.length) {
+    const inns = [...new Set(receipts.map((d) => d.fields.find((f) => f.name === "inn")?.value).filter((v): v is string => !!v))];
+    const rdates = receipts.map((d) => d.fields.find((f) => f.name === "date")?.value).filter((v): v is string => !!v);
+    const inWindow = rdates.filter((d) => months.includes(d.slice(0, 7)));
+    const bizDays = new Set(txs.filter((t) => t.credit > 0 && (t.category === "pos_sale" || t.category === "customer_p2p" || t.category === "marketplace_payout")).map((t) => t.date));
+    const corroborated = inWindow.filter((d) => { const t = Date.parse(d); return [-1, 0, 1].some((k) => bizDays.has(new Date(t + k * 86400000).toISOString().slice(0, 10))); });
+    checks.push({ id: "receipts_inn", title: "Receipts come from one tax ID (INN/STIR)", severity: "medium", passed: inns.length <= 1,
+      detail: inns.length <= 1 ? (inns.length ? `All ${receipts.length} receipt(s) carry INN ${inns[0]}.` : "No INN read from the receipts.") : `${inns.length} different INNs on the receipts: ${inns.join(", ")} — not the same business.`, evidence: [] });
+    checks.push({ id: "receipts_corroborate", title: "Receipt dates fall in the window and match business inflows", severity: "low", passed: inWindow.length === rdates.length && corroborated.length === inWindow.length,
+      detail: `${inWindow.length}/${rdates.length} receipt date(s) inside the 12-month window; ${corroborated.length}/${inWindow.length} have business inflows on the same day (±1).`, evidence: [] });
+  }
   return checks;
 }
