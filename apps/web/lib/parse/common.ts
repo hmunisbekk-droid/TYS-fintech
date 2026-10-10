@@ -25,7 +25,9 @@ export function excelDateToIso(v: number): string {
 
 /** Parse "1 234 567.89", "1,234,567.89", "1234567,89", "-12 000" → number. Returns null if not amount-like. */
 export function parseAmount(s: string): number | null {
-  let t = s.replace(/ /g, " ").trim().replace(/UZS|сум|so'm|som/gi, "").trim();
+  // normalise: non-breaking/thin spaces → space; Unicode minus, en/em dashes → ASCII minus; currency words removed
+  let t = s.replace(/[\u00a0\u202f\u2009]/g, " ").replace(/[\u2212\u2013\u2014]/g, "-").trim()
+    .replace(/UZS|сум|so'm|som|сўм|sum/gi, "").replace(/^["']|["']$/g, "").trim();
   if (!/^[-+(]?\s?[\d\s.,]+\)?$/.test(t)) return null;
   const neg = /^\(.*\)$/.test(t) || t.startsWith("-");
   t = t.replace(/[()+\-\s]/g, "");
@@ -40,6 +42,15 @@ export function parseAmount(s: string): number | null {
   const v = Number(intPart + (frac ? "." + frac : ""));
   if (!Number.isFinite(v)) return null;
   return neg ? -v : v;
+}
+
+export const TYPE_HEADER = /^(type|тип|turi|tur|operation type|тип операции|dr\/cr|d\/c|direction|вид|вид операции|kirim\/chiqim|приход\/расход)$/i;
+export function signFromType(v: unknown): "credit" | "debit" | null {
+  if (typeof v !== "string") return null;
+  const t = v.trim().toLowerCase();
+  if (/^(credit|cr|c|k|kirim|приход|зачисление|поступление|income|in|deposit|\+)$/.test(t)) return "credit";
+  if (/^(debit|dr|d|ch|chiqim|расход|списание|expense|out|withdrawal|-)$/.test(t)) return "debit";
+  return null;
 }
 
 export const HEADER_WORDS = {

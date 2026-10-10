@@ -117,7 +117,7 @@ export function parseStatementLines(docId: string, lines: Line[]): { txs: Transa
   };
   const rows: { tx: Transaction; amount: number; signed: boolean }[] = [];
   let holder: string | undefined, cardMask: string | undefined;
-  let lineNo = 0;
+  let lineNo = 0, droppedRows = 0;
   for (let i = 0; i < lines.length; i++) {
     const l = lines[i];
     const text = l.text;
@@ -136,7 +136,7 @@ export function parseStatementLines(docId: string, lines: Line[]): { txs: Transa
       if (v !== null && /\d/.test(s) && s.length >= 3 && !/^\d{4}$/.test(s)) nums.push({ v, x: t.x + t.w });
       else descParts.push(s);
     }
-    if (!nums.length) continue;
+    if (!nums.length) { droppedRows++; continue; }
     lineNo++;
     let debit = 0, credit = 0, balance: number | null = null, amount = 0, signed = false;
     if (clusters.length) {
@@ -169,6 +169,7 @@ export function parseStatementLines(docId: string, lines: Line[]): { txs: Transa
     if (unsigned.length > rows.length / 2 && !haveCols) warnings.push("Debit/credit columns not found; signs inferred from the balance chain.");
   }
   if (!rows.length) warnings.push("No transaction rows recognised in this PDF.");
+  else if (droppedRows > 0) warnings.push(`${droppedRows} dated line(s) had no recognisable amount and were skipped — check the amount format.`);
   return { txs: rows.map((r) => r.tx), holder, cardMask, warnings };
 }
 

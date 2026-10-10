@@ -1,0 +1,72 @@
+{
+ "truth": {
+  "rows": 400,
+  "credit": 30046000,
+  "debit": 25922000
+ },
+ "layouts": [
+  {
+   "layout": "RU CSV, one signed amount column + balance (semicolon, comma decimals)",
+   "rows": 400,
+   "rows_truth": 400,
+   "credit": 30046000,
+   "debit": 25922000,
+   "exact": true,
+   "warnings": [
+    "No debit/credit or type columns: negative amounts treated as debits; other signs resolved from the balance chain, or assumed credits when there is no balance column."
+   ]
+  },
+  {
+   "layout": "UZ XLSX, Kirim/Chiqim/Qoldiq columns, numeric cells",
+   "rows": 400,
+   "rows_truth": 400,
+   "credit": 30046000,
+   "debit": 25922000,
+   "exact": true,
+   "warnings": []
+  },
+  {
+   "layout": "EN CSV, quoted \"1,250,000.00\" amounts + separate Type column (Credit/Debit)",
+   "rows": 400,
+   "rows_truth": 400,
+   "credit": 30046000,
+   "debit": 25922000,
+   "exact": true,
+   "warnings": []
+  },
+  {
+   "layout": "CSV with Unicode minus (U+2212) for debits and no balance column",
+   "rows": 400,
+   "rows_truth": 400,
+   "credit": 30046000,
+   "debit": 25922000,
+   "exact": true,
+   "warnings": [
+    "No debit/credit or type columns: negative amounts treated as debits; other signs resolved from the balance chain, or assumed credits when there is no balance column."
+   ]
+  },
+  {
+   "layout": "Headerless CSV: date, description, signed amount, balance",
+   "rows": 400,
+   "rows_truth": 400,
+   "credit": 30046000,
+   "debit": 25922000,
+   "exact": true,
+   "warnings": [
+    "No debit/credit or type columns: negative amounts treated as debits; other signs resolved from the balance chain, or assumed credits when there is no balance column."
+   ]
+  },
+  {
+   "layout": "TSV with Приход/Расход columns, dd.mm.yyyy dates, nbsp thousands separators",
+   "rows": 400,
+   "rows_truth": 400,
+   "credit": 30046000,
+   "debit": 25922000,
+   "exact": true,
+   "warnings": []
+  }
+ ],
+ "exact_count": 6,
+ "n": 6,
+ "note": "Six statement layouts the parser was never tuned on, built from a fixture borrower's ground-truth rows; written by tests/ood.test.ts."
+}
