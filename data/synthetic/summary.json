@@ -7,7 +7,7 @@
  "default_threshold": -3.95,
  "anchors": {
   "AVG_WAGE_UZS": 5500000,
-  "BRV_UZS": 412000
+  "BRV_UZS": 440000
  },
  "archetypes": {
   "tailor": {

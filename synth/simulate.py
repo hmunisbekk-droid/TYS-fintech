@@ -21,7 +21,7 @@ from datetime import date, timedelta
 import numpy as np
 
 from .archetypes import (ARCHETYPES, AVG_WAGE_UZS, BANKS, FIRST_NAMES, FUEL, LAST_NAMES, MARKETPLACES,
-                         REGIONS, SUPERMARKETS, SUPPLIER_WORDS, TAXI_APPS, TELECOM, UTILITIES, WALLETS)
+                         REGIONS, SUPERMARKETS, SUPPLIER_WORDS, TAXI_APPS, TELECOM, UTILITIES, WALLETS, gender_surname)
 
 # Transaction categories – the same taxonomy is implemented in apps/web/lib/categorize.ts
 CATEGORIES = [
@@ -114,6 +114,7 @@ def make_borrower(rng: random.Random, idx: int, application_date: date) -> Borro
     a = rng.choice(ARCHETYPES)
     base = _lognormal(rng, a.income_mult * AVG_WAGE_UZS, a.income_sigma)
     first, last = rng.choice(FIRST_NAMES), rng.choice(LAST_NAMES)
+    last = gender_surname(first, last)
     card_mask = f"{rng.choice(['8600', '9860', '5614', '4073'])} **** **** {rng.randint(1000, 9999)}"
     since = application_date - timedelta(days=rng.randint(200, 2000))
     b = Borrower(

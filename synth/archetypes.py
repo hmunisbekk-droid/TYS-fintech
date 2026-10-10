@@ -13,7 +13,7 @@ from dataclasses import dataclass, field
 AVG_WAGE_UZS = 5_500_000
 
 # Base calculation value (БРВ / BHM). Update from lex.uz when it changes.
-BRV_UZS = 412_000
+BRV_UZS = 440_000
 
 
 @dataclass
@@ -82,8 +82,20 @@ SUPPLIER_WORDS = ["OPTOM", "TEXTIL", "MATO", "ULGURJI", "SAVDO", "IMPORT", "DIST
 
 FIRST_NAMES = ["Dilnoza", "Aziz", "Malika", "Jasur", "Nilufar", "Bekzod", "Gulnora", "Sardor", "Zilola", "Otabek",
                "Madina", "Umid", "Shahnoza", "Farrux", "Nodira", "Rustam", "Sevara", "Jahongir", "Kamola", "Sherzod"]
+FEMALE_FIRST_NAMES = {"Dilnoza", "Malika", "Nilufar", "Gulnora", "Zilola", "Madina", "Shahnoza", "Nodira", "Sevara", "Kamola"}
+# surnames are listed in a mixed form on purpose (keeps the random draws identical); gender_surname() fixes the ending
 LAST_NAMES = ["Karimova", "Tursunov", "Rahimova", "Yusupov", "Abdullayeva", "Ismoilov", "Saidova", "Mirzayev",
               "Xolmatova", "Nazarov", "Qodirova", "Ergashev", "Toshmatova", "Berdiyev", "Olimova", "Xasanov"]
+
+
+def gender_surname(first: str, last: str) -> str:
+    """Uzbek surnames of the -ov/-ev type take -a for women: Ismoilov → Ismoilova; Karimova → Karimov for men."""
+    female = first in FEMALE_FIRST_NAMES
+    if female and (last.endswith("ov") or last.endswith("ev")):
+        return last + "a"
+    if not female and (last.endswith("ova") or last.endswith("eva")):
+        return last[:-1]
+    return last
 
 REGIONS = ["Toshkent sh.", "Samarqand", "Farg'ona", "Andijon", "Namangan", "Qashqadaryo", "Buxoro", "Surxondaryo",
            "Xorazm", "Jizzax", "Navoiy", "Sirdaryo", "Toshkent vil.", "Qoraqalpog'iston"]

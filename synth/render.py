@@ -114,7 +114,9 @@ def receipt_html(rng: random.Random, borrower: dict, when: date, amount_hint: fl
         qty = rng.randint(1, 3)
         items.append(dict(name=name, qty=qty, price=f"{price:,}".replace(",", " "), total=f"{price*qty:,}".replace(",", " ")))
         total += price * qty
-    inn = f"{rng.randint(300000000, 399999999)}"
+    # one tax ID per business: derived from the borrower id, identical on every receipt of that borrower
+    inn = f"3{int(borrower['borrower_id'][1:]) % 100000000:08d}"
+    rng.randint(300000000, 399999999)  # keep the random stream aligned with earlier renders
     receipt_no = rng.randint(1000, 99999)
     fm = f"UZ{rng.randint(100000000000, 999999999999)}"
     fp = f"{rng.randint(100000000000, 999999999999)}"

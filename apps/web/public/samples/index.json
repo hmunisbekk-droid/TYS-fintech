@@ -3,9 +3,9 @@
   {
    "tag": "A",
    "borrower_id": "B00040",
-   "title": "Sample A — Kamola Ismoilov (hairdresser)",
+   "title": "Sample A — Kamola Ismoilova (hairdresser)",
    "description": "Clean file, one existing loan",
-   "applicant": "Kamola Ismoilov",
+   "applicant": "Kamola Ismoilova",
    "application_date": "2026-09-30",
    "requested_amount": 25000000.0,
    "requested_term_months": 36,
@@ -36,21 +36,21 @@
      "file": "receipt_00_photo.jpg",
      "total": 85000.0,
      "date": "2026-03-01",
-     "inn": "342056057",
+     "inn": "300000040",
      "receipt_no": "58332"
     },
     {
      "file": "receipt_01_photo.jpg",
      "total": 105000.0,
      "date": "2026-01-14",
-     "inn": "372469341",
+     "inn": "300000040",
      "receipt_no": "86370"
     },
     {
      "file": "receipt_02_photo.jpg",
      "total": 200000.0,
      "date": "2026-02-01",
-     "inn": "398081518",
+     "inn": "300000040",
      "receipt_no": "71303"
     }
    ],
@@ -102,21 +102,21 @@
      "file": "receipt_00_photo.jpg",
      "total": 170000.0,
      "date": "2025-12-12",
-     "inn": "333531617",
+     "inn": "300000004",
      "receipt_no": "73900"
     },
     {
      "file": "receipt_01_photo.jpg",
      "total": 170000.0,
      "date": "2025-11-26",
-     "inn": "360067241",
+     "inn": "300000004",
      "receipt_no": "89380"
     },
     {
      "file": "receipt_02_photo.jpg",
      "total": 30000.0,
      "date": "2026-04-28",
-     "inn": "312398966",
+     "inn": "300000004",
      "receipt_no": "96170"
     }
    ],
@@ -168,21 +168,21 @@
      "file": "receipt_00_photo.jpg",
      "total": 60000.0,
      "date": "2025-12-28",
-     "inn": "318100389",
+     "inn": "300000027",
      "receipt_no": "96604"
     },
     {
      "file": "receipt_01_photo.jpg",
      "total": 150000.0,
      "date": "2025-11-20",
-     "inn": "373083960",
+     "inn": "300000027",
      "receipt_no": "58758"
     },
     {
      "file": "receipt_02_photo.jpg",
      "total": 90000.0,
      "date": "2026-06-14",
-     "inn": "333243154",
+     "inn": "300000027",
      "receipt_no": "32673"
     }
    ],
