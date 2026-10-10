@@ -72,7 +72,7 @@ export interface LoanRequest {
 
 export interface MonthlySeries {
   months: string[];                 // YYYY-MM, ascending
-  regulatoryIncome: number[];       // clause-9 income credited to accounts (excl. own transfers, loans, refunds, cash deposits)
+  regulatoryIncome: number[];       // cl.18 income credited to accounts (excl. own transfers, loans, refunds, cash deposits)
   businessInflow: number[];         // POS + customer P2P + marketplace payouts
   nonBusinessInflow: number[];      // salary + pension + relatives
   ambiguousInflow: number[];        // cash deposits, self-transfers in, refunds

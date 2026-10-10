@@ -19,7 +19,7 @@ export default function IncomeChart({ s, meanIncome }: { s: MonthlySeries; meanI
     <div>
       <div className="row" style={{ justifyContent: "space-between" }}>
         <div className="legend">
-          <span><i style={{ background: "var(--series-1)" }} />Regulatory income (cl.9)</span>
+          <span><i style={{ background: "var(--series-1)" }} />Regulatory income (cl.18)</span>
           <span><i style={{ background: "var(--series-2)" }} />of which business revenue</span>
           <span><i style={{ background: "transparent", border: "2px dashed var(--text-2)", width: 10, height: 0 }} />12-month mean</span>
         </div>

@@ -7,7 +7,7 @@ import { runCase, type CaseResult, type Recommendation } from "@/lib/case";
 import { FEATURE_LABELS } from "@/lib/features";
 import { fetchAsFile, loadDocument } from "@/lib/loader";
 import { fmtPct, fmtUZS, memoToText } from "@/lib/memo";
-import { CITATIONS, type LenderType } from "@/lib/rules/pdn";
+import { CITATIONS, REGULATION } from "@/lib/rules/pdn";
 import type { FeatureStats, RiskModel } from "@/lib/risk";
 import type { ExistingLoan, LoanRequest, ParsedDocument, Transaction } from "@/lib/types";
 
@@ -21,7 +21,7 @@ const PRODUCTS: Record<LoanRequest["product"], { label: string; rate: number }> 
   ommabop: { label: "Ommabop 2 microloan (online, ≤ 50M)", rate: 0.30 },
   express: { label: "Express microloan (branch, ≤ 100M)", rate: 0.28 },
   business_online: { label: "Business Online 2 (≤ 100M)", rate: 0.26 },
-  family_program: { label: "Family-entrepreneurship programme (ПДН-exempt)", rate: 0.14 },
+  family_program: { label: "Family-entrepreneurship programme (exempt, cl.4)", rate: 0.14 },
 };
 const REC_LABEL: Record<Recommendation, { t: string; cls: string }> = {
   approve: { t: "Approve", cls: "good" }, approve_reduced: { t: "Approve at a reduced amount", cls: "warn" },
@@ -39,7 +39,7 @@ export default function CasePage() {
   const [request, setRequest] = useState<LoanRequest>({ amount: 25_000_000, term_months: 24, annual_rate: 0.28, product: "express" });
   const [loans, setLoans] = useState<ExistingLoan[]>([]);
   const [coIncome, setCoIncome] = useState(0);
-  const [lenderType, setLenderType] = useState<LenderType>("bank");
+  const [useMedian, setUseMedian] = useState(false);
   const [docs, setDocs] = useState<ParsedDocument[]>([]);
   const [busy, setBusy] = useState<string | null>(null);
   const [progress, setProgress] = useState("");
@@ -62,9 +62,9 @@ export default function CasePage() {
   const result: CaseResult | null = useMemo(() => {
     if (!model || !stats || !docs.some((d) => d.kind === "statement" && d.transactions.length)) return null;
     try {
-      return runCase({ applicationDate: appDate, applicantName: applicant || undefined, documents: docs, existingLoans: loans, request, coBorrowerIncome: coIncome || undefined, lenderType }, model, stats);
+      return runCase({ applicationDate: appDate, applicantName: applicant || undefined, documents: docs, existingLoans: loans, request, coBorrowerIncome: coIncome || undefined, useMedian }, model, stats);
     } catch (e) { console.error(e); return null; }
-  }, [model, stats, docs, appDate, applicant, loans, request, coIncome, lenderType]);
+  }, [model, stats, docs, appDate, applicant, loans, request, coIncome, useMedian]);
 
   const lastRunHash = useRef("");
   const logTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -119,7 +119,7 @@ export default function CasePage() {
   };
   const clearCase = async () => {
     setDocs([]); setLoans([]); setDecision(null); setApplicant(""); setCoIncome(0); setReason(""); setEvidence(null);
-    setAppDate(today()); setRequest({ amount: 25_000_000, term_months: 24, annual_rate: 0.28, product: "express" }); setLenderType("bank");
+    setAppDate(today()); setRequest({ amount: 25_000_000, term_months: 24, annual_rate: 0.28, product: "express" }); setUseMedian(false);
     log.current = new AuditLog(); lastRunHash.current = "";
     await log.current.append("case_created", { ts: Date.now() }, "New case opened in browser");
     setAudit([...log.current.entries]);
@@ -140,10 +140,10 @@ export default function CasePage() {
     }
     if (doc) { setEvidence({ title: `${title} — ${doc.fileName}`, txs: [], text: doc.fields.length ? doc.fields.map((f) => `${f.name}: ${f.value} (confidence ${(f.confidence * 100).toFixed(0)}%, ${f.source})`).join("\n") : doc.textSample ?? "" }); return; }
     const clause = Object.values(CITATIONS).find((c) => ids.includes(c.id));
-    if (clause) { setEvidence({ title: `${clause.id} — CBU debt-burden regulation`, txs: [], text: clause.text }); return; }
+    if (clause) { setEvidence({ title: `${clause.id} — ${REGULATION.short}`, txs: [], text: `${clause.text}\n\nSource: ${REGULATION.decision}. ${REGULATION.url}` }); return; }
     const explain: Record<string, string> = {
       input: "Entered by the officer in section 1 (request, obligations, co-borrower income).",
-      rules: `Deterministic rule engine ${result.engineVersions.rules}: ПДН per cl.1, cl.2, cl.4¹, cl.7, cl.10, cl.11 — see section 3 and the citations on each line.`,
+      rules: `Deterministic rule engine ${result.engineVersions.rules}: ПДН per CBU Regulation No. 3618 (banks) — cl.2, cl.3, cl.4, cl.7, cl.8, cl.12, cl.13, cl.14, cl.18, cl.19; see section 3 and the citations on each line.`,
       model: `Risk model ${result.engineVersions.model}: gradient-boosted trees on 18 cash-flow features; drivers shown in section 4b.`,
       integrity: "Integrity checks in section 4a; each failed check lists the statement lines it is based on.",
       "credit-bureau/input": "Existing obligations as entered in section 1 (credit bureau in production).",
@@ -202,10 +202,6 @@ export default function CasePage() {
             <label className="field">Term (months)<select value={request.term_months} onChange={(e) => setRequest({ ...request, term_months: Number(e.target.value) })}>{[6, 12, 18, 24, 36, 48, 60].map((t) => <option key={t} value={t}>{t}</option>)}</select></label>
             <label className="field">Rate p.a.<input type="number" step={0.01} value={request.annual_rate} onChange={(e) => setRequest({ ...request, annual_rate: Number(e.target.value) })} /></label>
             <label className="field">Co-borrower income / month<input type="number" step={100_000} value={coIncome} onChange={(e) => setCoIncome(Number(e.target.value))} /></label>
-            <label className="field" title="Bank: no small-loan exclusion (15% portfolio quota only). MFO: 50 BRV, 75 BRV for self-employed borrowers. Pawnshop: 50 BRV.">Lender type<select value={lenderType} onChange={(e) => setLenderType(e.target.value as LenderType)}>
-              <option value="bank">Bank (MKBANK)</option>
-              <option value="mfo">MFO</option>
-              <option value="pawnshop">Pawnshop</option></select></label>
           </div>
           <h3 style={{ marginTop: ".8rem" }}>Existing obligations <span className="muted small">(credit bureau in production; editable here)</span></h3>
           <div className="tscroll"><table><thead><tr><th>Lender</th><th className="num">Monthly payment</th><th className="num">Term</th><th className="num">Outstanding</th><th className="num">DPD</th><th>Role</th><th></th></tr></thead>
@@ -261,30 +257,32 @@ export default function CasePage() {
               <div>
                 <IncomeChart s={result.series} meanIncome={result.pdn.meanIncome} />
                 <div className="row" style={{ marginTop: ".5rem" }}>
-                  <div className="kpi"><span className="v">{fmtUZS(result.pdn.meanIncome)}</span><span className="l">mean monthly regulatory income (cl.7)</span></div>
+                  <div className="kpi"><span className="v">{fmtUZS(result.pdn.meanIncome)}</span><span className="l">mean monthly regulatory income (cl.13, cl.18)</span></div>
                   <div className="kpi"><span className="v">{fmtPct(result.features.biz_share)}</span><span className="l">business share of income</span></div>
                   <div className="kpi"><span className="v">{result.features.income_cv.toFixed(2)}</span><span className="l">volatility (CV)</span></div>
                   <div className="kpi"><span className="v">{result.features.months_observed}/12</span><span className="l">months observed</span></div>
                 </div>
               </div>
               <div>
-                <h3>ПДН — <span className={`tag ${result.pdn.exempt ? "info" : result.pdn.passes ? "good" : "bad"}`}>{result.pdn.exempt ? "cap not applicable" : result.pdn.passes ? "within 50% cap" : "above 50% cap"}</span></h3>
+                <h3>ПДН — <span className={`tag ${result.pdn.status === "exempt" ? "info" : result.pdn.status === "pass" ? "good" : result.pdn.status === "quota" ? "warn" : "bad"}`}>{result.pdn.status === "exempt" ? "requirements not applicable" : result.pdn.status === "pass" ? "within 50% limit" : result.pdn.status === "quota" ? "50–100%: bank quota only" : result.pdn.status === "insufficient_history" ? "under 6 months of history" : "above the limits"}</span> <span className="muted small">{REGULATION.short}</span></h3>
                 <div className="tscroll"><table><tbody>
                   {result.pdn.existingPayments.map((l, i) => <tr key={i}><td>{l.label} <span className="cite" title={CITATIONS[l.citation].text}>{CITATIONS[l.citation].id}</span>{l.note && <span className="muted small"> {l.note}</span>}</td><td className="num">{fmtUZS(l.value)}</td></tr>)}
-                  <tr><td>Requested loan payment <span className="cite" title={CITATIONS.term36.text}>{request.term_months > 36 ? "cl.4¹" : "cl.2"}</span></td><td className="num">{fmtUZS(result.pdn.newPayment)}</td></tr>
+                  <tr><td>Requested loan payment <span className="cite" title={request.term_months > 36 ? CITATIONS.spreading.text : CITATIONS.scope.text}>{request.term_months > 36 ? "cl.8" : "cl.7"}</span></td><td className="num">{fmtUZS(result.pdn.newPayment)}</td></tr>
                   <tr><th>Total monthly payments</th><th className="num">{fmtUZS(result.pdn.totalPayments)}</th></tr>
-                  <tr><td>Income base (12-month mean{coIncome ? " + co-borrower" : ""}) <span className="cite" title={CITATIONS.income12.text}>cl.7</span></td><td className="num">{fmtUZS(result.pdn.incomeBase)}</td></tr>
-                  <tr><th>ПДН <span className="cite" title={CITATIONS.cap.text}>cl.10</span></th><th className="num" style={{ fontSize: "1.2rem" }}>{Number.isFinite(result.pdn.ratio) ? fmtPct(result.pdn.ratio) : "n/a"}</th></tr>
+                  <tr><td>Income base ({result.pdn.medianUsed ? "median" : "mean"} of {result.pdn.monthsUsed} months{coIncome ? " + co-borrower" : ""}) <span className="cite" title={CITATIONS.income.text}>cl.13</span>{result.pdn.medianUsed && <span className="cite" title={CITATIONS.median.text}>cl.14</span>}</td><td className="num">{fmtUZS(result.pdn.incomeBase)}</td></tr>
+                  <tr><th>ПДН <span className="cite" title={CITATIONS.cap.text}>cl.3 ¶1</span></th><th className="num" style={{ fontSize: "1.2rem" }}>{Number.isFinite(result.pdn.ratio) ? fmtPct(result.pdn.ratio) : "n/a"}</th></tr>
                 </tbody></table></div>
                 <div className="bar cap" style={{ marginTop: ".5rem" }}><i style={{ width: `${Math.min(100, (result.pdn.ratio / 1) * 100)}%`, background: result.pdn.ratio <= 0.5 ? "var(--good)" : "var(--bad)" }} /></div>
-                <div className="small muted">0% ─────────── 50% cap ─────────── 100%</div>
+                <div className="small muted">0% ─────────── 50% limit ─────────── 100% (15% quota ceiling)</div>
                 {result.pdn.exempt && <p className="small"><span className="tag info">{CITATIONS[result.pdn.exemptCitation!].id}</span> {result.pdn.exemptReason}</p>}
+                {result.pdn.withinQuota && <p className="small"><span className="tag warn">cl.3 ¶3</span> Above 50% but within 100%: the bank may issue only inside its 15% portfolio quota (<span className="cite" title={CITATIONS.quota100.text}>cl.3 ¶3</span>) — a bank-level decision, so the case is referred.</p>}
+                {result.pdn.newSelfEmployedEligible && <p className="small"><span className="tag info">cl.3 ¶4</span> Self-employed registration under 6 months old: eligible for issue without the ratio inside the bank&apos;s 15% quota (<span className="cite" title={CITATIONS.newSelfEmployed.text}>cl.3 ¶4</span>).</p>}
+                <label className="small" style={{ display: "flex", gap: ".4rem", alignItems: "center", marginTop: ".3rem" }}><input type="checkbox" checked={useMedian} onChange={(e) => setUseMedian(e.target.checked)} />Use the median monthly income when lower <span className="cite" title={CITATIONS.median.text}>cl.14</span> <span className="muted">(median {fmtUZS(result.pdn.medianIncome)}, mean {fmtUZS(result.pdn.arithmeticMean)})</span></label>
                 <p className="small">Max affordable at {request.term_months} months: <b>{fmtUZS(result.pdn.maxAffordableAmount)}</b></p>
                 <label className="field" style={{ marginTop: ".5rem" }}>What if the requested amount were… <b>{fmtUZS(request.amount)}</b>
                   <input type="range" min={1_000_000} max={100_000_000} step={500_000} value={request.amount} onChange={(e) => setRequest({ ...request, amount: Number(e.target.value) })} />
                 </label>
-                {result.pdn.lenderType === "bank" && <p className="small muted"><span className="tag info">bank</span> No small-loan exclusion for banks; the 15% portfolio quota <span className="cite" title={CITATIONS.portfolioAllowance.text}>cl.2 (2024)</span> is a bank-level decision, so the ratio is computed for every application.</p>}
-                {result.pdn.warnings.filter((w) => !w.startsWith("Bank lender")).map((w, i) => <div key={i} className="small" style={{ color: "var(--warn)" }}>⚠ {w}</div>)}
+                {result.pdn.warnings.map((w, i) => <div key={i} className="small" style={{ color: "var(--warn)" }}>⚠ {w}</div>)}
               </div>
             </div>
           </div>

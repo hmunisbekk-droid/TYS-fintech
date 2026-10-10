@@ -1,22 +1,34 @@
-# Regulation quotes for the defence (verbatim, Uzbek original)
+# Regulation quotes for the defence (verbatim fragments, Uzbek original)
 
-Source: CBU regulation on the debt-burden ratio of individual borrowers, lex.uz/docs/4654149, as amended by
-Board Resolution 42/16 (lex.uz/docs/6809992, registered 21 Feb 2024, effective 23 Mar 2024). Checked 10 Oct 2026.
-BRV (базавий ҳисоблаш миқдори / БРВ) = **440,000 UZS from 1 September 2026** (previously 412,000) → 50 BRV = 22,000,000 UZS.
+**Source:** Regulation "on macroprudential norms set for banks and on the maximum values of payments on loans (microloans)
+issued by them" — *Банкларга ўрнатиладиган макропруденциал нормативлар ҳамда улар томонидан бериладиган кредитлар
+(микроқарзлар) бўйича тўловларнинг энг юқори қийматларига доир талаблар тўғрисидаги низом*. Approved by CBU Board decision
+No. 7/3 of 8 April 2025; registered by the Ministry of Justice on 22 April 2025, No. 3618; in force 24 July 2025; amended by
+Board decision No. 31/9 of 5 December 2025 (in force 21 January 2026). Text: https://lex.uz/uz/docs/7491592. Checked 11 Oct 2026.
 
-| Clause | Quote (verbatim) | Daromad implementation |
+**Why not regulation No. 3205 (lex.uz/docs/4654149)?** Since the amendment of 21 April 2025 (No. 3205-4, in force 24 July
+2025) that regulation is titled *"Микромолия ташкилоти ва ломбард томонидан бериладиган кредитлар (микроқарзлар) бўйича қарз
+олувчи жисмоний шахсларнинг қарз юкини тартибга солиш тўғрисидаги низом"* and its scope sentence names only non-bank credit
+organisations («микромолия ташкилоти ва ломбард (бундан буён матнда нобанк кредит ташкилоти деб юритилади)»). MKBANK is a
+bank, so No. 3618 governs. Daromad implements No. 3618 only; no BRV thresholds exist in it.
+
+| Clause | Quote (verbatim fragment) | Daromad implementation |
 |---|---|---|
-| cl.1 definition | «қарз юки кўрсаткичи — қарз олувчининг кредит ва/ёки микроқарзлари бўйича ўртача ойлик тўловлари миқдорининг … ўртача ойлик даромадига нисбати» | `computePdn`: payments ÷ income base |
-| cl.2 scope | «қарз берувчи томонидан кредит (микроқарз) ажратиш тўғрисида кўриб чиқилаётган мурожаат бўйича» — the application under review is included; all loan agreements with all lenders; joint-borrower loans | obligations table + requested loan payment |
-| cl.2 (2024) — each bullet names a lender type | **Banks** («банк томонидан…»): «микроқарзлар сонининг энг кўпи билан 15 фоизигача бўлган миқдорида» — up to 15% of the number of a bank's loans/microloans to individuals may be issued outside the requirement. **MFOs and pawnshops** («микромолия ташкилоти ва ломбард томонидан…»): «базавий ҳисоблаш миқдорининг 50 бараваридан ошмаганда» — excluded when amount + outstanding principal ≤ 50 BRV. **MFOs lending to the self-employed** («микромолия ташкилоти томонидан ўзини ўзи band қилган…»): «…75 бараваридан ошмаганда ҳисобланмаслиги ёки инобатга олинмаслиги мумкин». | Lender-type setting, default **bank** (MKBANK): no small-loan exclusion, ratio computed for every application, the 15% quota shown as a note. MFO/pawnshop settings apply 50 BRV, MFO + self-employed 75 BRV. |
-| cl.4 guarantors | «улар бўйича 30 кундан ортиқ муддати ўтган тўловлари мавжуд бўлса» — guarantor loans count only when payments are more than 30 days overdue | DPD column; `role = guarantor` counted only if DPD > 30 |
-| cl.4¹ long terms | «кредит (микроқарз) бўйича барча тўловлар 36 ойга тенг миқдорда тақсимланади» — terms over 36 months spread evenly over 36 | `normalisePayment` |
-| cl.6 date | calculation date within 10 calendar days of the loan date | case date |
-| cl.7 income | «охирги 12 ой ичида олган даромадлари миқдорининг ўртача арифметик қиймати сифатида ҳисобланади» | 12-month arithmetic mean; co-borrower income added |
-| cl.9 evidence | employer-confirmed salary; pension; funded-pension contributions; «қарз олувчининг банк ҳисобварақларига тушган даромадлари тўғрисидаги маълумотлардан» (income credited to bank accounts); taxes paid; interest/dividends/rent; lenders may use other data | the statement-based income figure |
-| cl.10 cap | «қарз юки кўрсаткичи 50 фоиздан ошмаслиги керак» (from 1 Jan 2025; 60% between 1 Jul 2024 and 1 Jan 2025) | pass/fail, maximum affordable amount |
-| cl.11 exemption | «оилавий тадбиркорликни ривожлантириш дастурлари доирасида ажратиладиган кредитларга нисбатан татбиқ этилмайди» | product "family programme" → cap not applicable, capacity still assessed |
+| cl.2 definition | «қарз олувчининг кредит (микроқарзлари) бўйича ўртача ойлик тўловлари миқдорининг … ўртача ойлик даромадига нисбати» | `computePdn`: payments ÷ income base |
+| cl.3 ¶1 limit | «қарз юки кўрсаткичи 50 фоиздан ошмаслиги лозим» | pass/fail at 50%; maximum affordable amount back-solved |
+| cl.3 ¶2–3 quota up to 100% | base: «берилган, бироқ сўндирилмаган барча кредитлар (микроқарзлар) сонининг»; «энг кўпи билан 15 фоизигача банк томонидан қарз олувчиларга»; «уларнинг қарз юки кўрсаткичи 100 фоизгача бўлиши мумкин» (added by decision 31/9, 2025) | status **quota** when 50% < ratio ≤ 100%: recommendation *refer* — the 15% share of the number of outstanding loans is a bank-level decision |
+| cl.3 ¶4 new self-employed | «биринчи марта рўйхатдан ўтганига» … «санадан олдинги олти ойдан ошмаган»; «инобатга олинмаслиги ва (ёки) ҳисобланмаслиги мумкин» — income-generating loans, within 15% of outstanding loans | certificate `registered_since` < 6 months before the application → eligibility badge; the ratio is still computed |
+| cl.3 ¶5 | «мазкур Низомнинг 4-бандида кўрсатилган кредитлар … сонини аниқлашда инобатга олинмайди» — cl.4 loans are excluded from the quota base | note |
+| cl.4 exemptions | «татбиқ этилмайди»: «якка тартибдаги тадбиркорларга бериладиган кредитлар», «оилавий тадбиркорликни ривожлантириш дастурлари доирасида бериладиган кредитлар», «таълим кредитлари» | product "family programme" → exempt; individual-entrepreneur and education loans are outside the prototype's products |
+| cl.5 when | «кредит (микроқарз) беришга ёки кредит (микроқарз) лимитини оширишга» — also when payments are raised, the term extended, a claim bought or a loan refinanced | every analysis run is a calculation; versions logged |
+| cl.7 scope | «барча қарз берувчилар билан тузилган кредит (микроқарз) шартномаси»; co-borrower: «биргаликда қарз олувчининг барча қарз берувчилар билан тузилган»; guarantor: «агар … 30 кундан ортиқ муддати ўтган тўловлари мавжуд бўлса» | obligations table (KATM pull in production); `role = guarantor` counted only if DPD > 30 |
+| cl.8 spreading | «аннуитет усулида»; microloan: «36 ойдан ошган тақдирда … 36 ойга тенг миқдорда»; other loans over 60 months → 60 (revolving lines and cards excluded); mortgages over 180 → 180 | `normalisePayment(monthly, term, kind)` |
+| cl.10 existing payment | average monthly payment = remaining principal + interest + fees ÷ months left; overdue amounts and penalties added | obligations table: monthly payment field |
+| cl.12 timing | «вақт оралиғи 3 иш кунидан ошмаслиги керак» | case date on the memo and in the audit log |
+| cl.13 income | «камида 6 ой учун узлуксиз, бироқ 12 ойдан ошмаган муддат учун»; 1/12 of 12 months, or 1/6 … 1/11 for 6–11 months | `monthsUsed`; status **insufficient_history** under 6 months |
+| cl.14 median | «мазкур қиймат ушбу Низомнинг 13-бандида белгиланган арифметик қийматдан кичикроқ бўлса» | "use the median when lower" switch |
+| cl.18 account receipts | «мазкур қарз олувчи ва биргаликда қарз олувчининг банк ҳисобварақларига тушган тушумларини инобатга олади»; no double counting | the statement-based income figure (own transfers, loan proceeds, refunds, cash deposits excluded) |
+| cl.19 evidence | salary («иш ҳақи тўғрисидаги тасдиқланган маълумотлар»), pension («пенсия миқдори тўғрисидаги маълумотлар»), funded-pension contributions, tax data incl. «давлат солиқ хизмати органлари томонидан тасдиқланган жисмоний шахснинг жами йиллик даромади тўғрисидаги», interest/dividends/rent; net of taxes | slide 2: a self-employed borrower has none of these — only cl.18 |
+| cl.22 other data | «ўзининг ахборот тизимлари, кредит бюроси томонидан тақдим этиладиган ахборотлар» | KATM / core-banking pulls (production design) |
 
-A press summary of the 2024 amendment said "co-borrowers and guarantors count as borrowers". The regulation text
-distinguishes them: co-borrower loans are always counted (cl.2), guarantor loans only when overdue > 30 days (cl.4).
-Daromad follows the text.
+Note: the text on lex.uz includes the amendments in force from 21 January 2026; the quotes above were read on that version.

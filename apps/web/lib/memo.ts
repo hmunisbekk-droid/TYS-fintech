@@ -51,11 +51,11 @@ export function buildMemo(a: { inp: CaseInput; months: string[]; series: Monthly
   p1.paragraphs.push({ text: `Documents reviewed: ${a.inp.documents.map((d) => `${d.fileName} (${d.kind})`).join(", ")}.`, sources: a.inp.documents.map((d) => d.id) });
   sections.push(p1);
 
-  // 2. Income evidence (clause 9)
-  const p2: MemoSection = { title: "2. Income evidence (regulation cl.7, cl.9)", paragraphs: [] };
+  // 2. Income evidence (cl.18 account receipts, cl.13 averaging)
+  const p2: MemoSection = { title: "2. Income evidence (regulation cl.13, cl.18)", paragraphs: [] };
   p2.paragraphs.push({ text: `Income credited to the applicant's accounts over ${F("n_months", n, `${n} months`, stmtSrc)} (${a.months[0]} to ${a.months[n - 1]}) averages ` +
     `${F("mean_reg_income", meanReg, fmtUZS(meanReg), stmtSrc)} per month after excluding own-card transfers, loan disbursements, refunds and cash deposits ` +
-    `(${F("mean_ambiguous", meanAmb, fmtUZS(meanAmb), stmtSrc)} per month excluded as not income).`, sources: [stmtSrc, "cl.9"] });
+    `(${F("mean_ambiguous", meanAmb, fmtUZS(meanAmb), stmtSrc)} per month excluded as not income).`, sources: [stmtSrc, "cl.18"] });
   p2.paragraphs.push({ text: `Of this, business revenue (POS, customer transfers, platform payouts) is ${F("mean_biz", meanBiz, fmtUZS(meanBiz), stmtSrc)} per month ` +
     `and salary/pension/family transfers are ${F("mean_nonbiz", meanNonBiz, fmtUZS(meanNonBiz), stmtSrc)} per month. ` +
     `Weakest month ${a.months[minIdx]}: ${F("min_month", a.series.regulatoryIncome[minIdx], fmtUZS(a.series.regulatoryIncome[minIdx]), stmtSrc)}; ` +
@@ -68,13 +68,15 @@ export function buildMemo(a: { inp: CaseInput; months: string[]; series: Monthly
   const p3: MemoSection = { title: "3. Debt-burden ratio (ПДН)", paragraphs: [] };
   const ex = a.pdn.existingPayments;
   ex.forEach((l, i) => F(`loan_label_${i}`, l.label, l.label, "credit-bureau/input"));
-  p3.paragraphs.push({ text: ex.length ? `Existing obligations counted (cl.2, cl.4¹): ${ex.map((l) => `${l.label} ${F(`loan_${l.label}`, l.value, fmtUZS(l.value), "credit-bureau/input")}`).join("; ")}.` :
-    "No existing loan obligations reported (credit bureau / statement).", sources: ["cl.2", "cl.4¹"] });
-  p3.paragraphs.push({ text: `New loan payment ${F("new_pmt", a.pdn.newPayment, fmtUZS(a.pdn.newPayment), "rules")} (annuity${a.inp.request.term_months > 36 ? ", spread over 36 months per cl.4¹" : ""}). ` +
+  p3.paragraphs.push({ text: ex.length ? `Existing obligations counted (cl.7, cl.8): ${ex.map((l) => `${l.label} ${F(`loan_${l.label}`, l.value, fmtUZS(l.value), "credit-bureau/input")}`).join("; ")}.` :
+    "No existing loan obligations reported (credit bureau / statement).", sources: ["cl.7", "cl.8"] });
+  p3.paragraphs.push({ text: `New loan payment ${F("new_pmt", a.pdn.newPayment, fmtUZS(a.pdn.newPayment), "rules")} (annuity${a.inp.request.term_months > 36 ? ", spread per cl.8" : ""}). ` +
     `Total monthly payments ${F("total_pmt", a.pdn.totalPayments, fmtUZS(a.pdn.totalPayments), "rules")} ÷ income base ${F("income_base", a.pdn.incomeBase, fmtUZS(a.pdn.incomeBase), "rules")} ` +
-    `= ПДН ${F("pdn", a.pdn.ratio, Number.isFinite(a.pdn.ratio) ? fmtPct(a.pdn.ratio) : "n/a", "rules")} against the ${F("cap", a.pdn.cap, fmtPct(a.pdn.cap), "cl.10")} cap (cl.10). ` +
-    (a.pdn.exempt ? `The cap does not apply: ${a.pdn.exemptReason} (${a.pdn.exemptCitation}). ` : "") +
-    `Maximum affordable amount at the requested term: ${F("max_afford", a.pdn.maxAffordableAmount, fmtUZS(a.pdn.maxAffordableAmount), "rules")}.`, sources: ["rules", "cl.10"] });
+    `(${a.pdn.medianUsed ? "median, cl.14" : "arithmetic mean, cl.13"}${a.pdn.monthsUsed < 12 ? ` over ${F("months_used", a.pdn.monthsUsed, String(a.pdn.monthsUsed), "cl.13")} months` : ""}) ` +
+    `= ПДН ${F("pdn", a.pdn.ratio, Number.isFinite(a.pdn.ratio) ? fmtPct(a.pdn.ratio) : "n/a", "rules")} against the ${F("cap", a.pdn.cap, fmtPct(a.pdn.cap), "cl.3")} limit (cl.3 ¶1). ` +
+    (a.pdn.exempt ? `The requirements do not apply: ${a.pdn.exemptReason} (cl.4). ` : "") +
+    (a.pdn.withinQuota ? `The ratio is within ${F("quota_cap", a.pdn.quotaCap, fmtPct(a.pdn.quotaCap), "cl.3")}, so the loan is possible only inside the bank's ${F("quota_share", 15, "15", "cl.3")}% quota (cl.3 ¶3). ` : "") +
+    `Maximum affordable amount at the requested term: ${F("max_afford", a.pdn.maxAffordableAmount, fmtUZS(a.pdn.maxAffordableAmount), "rules")}.`, sources: ["rules", "cl.3", "cl.13"] });
   sections.push(p3);
 
   // 4. Integrity
@@ -95,13 +97,11 @@ export function buildMemo(a: { inp: CaseInput; months: string[]; series: Monthly
 
   // 6. Recommendation
   F("months_observed", a.features.months_observed, String(a.features.months_observed), stmtSrc);
-  // exemption facts (cl.2 small-loan threshold, cl.11) so the reasons text verifies
-  F("brv", a.pdn.brv, fmtUZS(a.pdn.brv), "cl.2 (BRV)");
-  F("brv_multiple", 50, "50", "cl.2");
-  F("brv_multiple_75", 75, "75", "cl.2");
-  F("brv_threshold", 50 * a.pdn.brv, fmtUZS(50 * a.pdn.brv), "cl.2");
-  F("brv_threshold_75", 75 * a.pdn.brv, fmtUZS(75 * a.pdn.brv), "cl.2");
-  F("quota_15", 15, "15", "cl.2 (2024)");
+  // facts used by the recommendation reasons (cl.3 quota, cl.4 exemption, cl.13 history) so the text verifies
+  F("quota_share", 15, "15", "cl.3");
+  F("quota_cap", a.pdn.quotaCap, fmtPct(a.pdn.quotaCap), "cl.3");
+  F("months_used", a.pdn.monthsUsed, String(a.pdn.monthsUsed), "cl.13");
+  F("min_months", 6, "6", "cl.13");
   if (a.pdn.exemptReason) F("exempt_reason", a.pdn.exemptReason, a.pdn.exemptReason, a.pdn.exemptCitation ?? "rules");
   const p6: MemoSection = { title: "6. Recommendation", paragraphs: [] };
   p6.paragraphs.push({ text: `${recLabel[a.recommendation]}. ${a.reasons.join(" ")}`, sources: ["rules", "model", "integrity"] });
@@ -125,7 +125,7 @@ export function verifyMemo(memo: Memo): { ok: boolean; numbersChecked: number; u
   for (const s of memo.sections) for (const p of s.paragraphs) {
     const text = p.text.replace(/\b\d{4}-\d{2}(-\d{2})?\b/g, " ")        // months & dates (ISO)
       .replace(/\b\d{2}\.\d{2}\.\d{4}\b/g, " ")                         // dates (dd.mm.yyyy)
-      .replace(/cl\.\d+[¹²]?/g, " ").replace(/\b\d+\. /g, " ")           // clause ids, section numbers
+      .replace(/cl\.\d+[¹²]?( ¶\d+)?/g, " ").replace(/\b\d+\. /g, " ")           // clause ids, section numbers
       .replace(/\d+ (checks|months)/g, " ");
     for (const raw of text.match(/-?\d[\d,]*\.?\d*/g) ?? []) {
       const tok = raw.replace(/[,.]+$/, "");

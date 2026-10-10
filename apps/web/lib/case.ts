@@ -4,7 +4,8 @@ import { computeFeatures, last12Months, monthlySeries, type Features } from "./f
 import { runIntegrityChecks, type Check } from "./integrity";
 import { buildMemo, fmtPct, fmtUZS, type Memo } from "./memo";
 import { PARSER_VERSION } from "./parse/common";
-import { computePdn, type LenderType, type PdnResult } from "./rules/pdn";
+import { computePdn, type PdnResult } from "./rules/pdn";
+import { parseDate } from "./parse/common";
 import { attributions, predictProbability, riskBand, type Attribution, type FeatureStats, type RiskModel } from "./risk";
 import type { ExistingLoan, LoanRequest, MonthlySeries, ParsedDocument, Transaction } from "./types";
 
@@ -15,7 +16,7 @@ export interface CaseInput {
   existingLoans: ExistingLoan[];
   request: LoanRequest;
   coBorrowerIncome?: number;
-  lenderType?: LenderType;     // default bank (MKBANK)
+  useMedian?: boolean;         // cl.14: use the median monthly income when it is lower than the mean
 }
 
 export type Recommendation = "approve" | "approve_reduced" | "refer" | "decline";
@@ -75,9 +76,10 @@ export function runCase(inp: CaseInput, model: RiskModel, stats: FeatureStats): 
   const features = computeFeatures(inWindow, inp.request.amount, inp.request.term_months, inp.existingLoans, months);
   timings.features = performance.now() - t; t = performance.now();
 
-  const selfEmployed = inp.documents.some((d) => d.kind === "certificate" && d.fields.some((f) => f.name === "status"));
-  const pdn = computePdn({ lenderType: inp.lenderType ?? "bank", selfEmployed, monthlyIncome: series.regulatoryIncome, coBorrowerMonthlyIncome: inp.coBorrowerIncome,
-    existingLoans: inp.existingLoans, request: inp.request });
+  const cert = inp.documents.find((d) => d.kind === "certificate");
+  const registeredSince = cert?.fields.find((f) => f.name === "registered_since")?.value;
+  const pdn = computePdn({ monthlyIncome: series.regulatoryIncome, monthsObserved: features.months_observed, useMedian: inp.useMedian, coBorrowerMonthlyIncome: inp.coBorrowerIncome,
+    existingLoans: inp.existingLoans, request: inp.request, selfEmployedRegisteredSince: registeredSince ? parseDate(registeredSince) ?? undefined : undefined, applicationDate: inp.applicationDate });
   timings.rules = performance.now() - t; t = performance.now();
 
   const probability = predictProbability(model, features);
@@ -93,14 +95,20 @@ export function runCase(inp: CaseInput, model: RiskModel, stats: FeatureStats): 
   const reasons: string[] = [];
   let rec: Recommendation;
   if (highFails.length) { rec = "refer"; reasons.push(`High-severity integrity finding: ${highFails.map((c) => c.title).join("; ")}.`); }
+  else if (pdn.status === "insufficient_history") { rec = "refer"; reasons.push(`Only ${pdn.monthsUsed} month(s) of income history; cl.13 requires at least 6 continuous months — committee review or more statements.`); }
+  else if (pdn.status === "quota") {
+    rec = "refer";
+    reasons.push(`ПДН ${fmtPct(pdn.ratio)} exceeds the ${fmtPct(pdn.cap)} limit (cl.3 ¶1) but is within ${fmtPct(pdn.quotaCap)}: possible only inside the bank's 15% quota (cl.3 ¶3) — committee decision. Maximum affordable amount at this term: ${fmtUZS(pdn.maxAffordableAmount)}.`);
+  }
   else if (!pdn.passes) {
     rec = pdn.maxAffordableAmount > 0 ? "approve_reduced" : "decline";
-    reasons.push(`ПДН ${fmtPct(pdn.ratio)} exceeds the ${fmtPct(pdn.cap)} cap (cl.10). Maximum affordable amount at this term: ${fmtUZS(pdn.maxAffordableAmount)}.`);
+    reasons.push(`ПДН ${fmtPct(pdn.ratio)} exceeds the ${fmtPct(pdn.cap)} limit (cl.3 ¶1)${Number.isFinite(pdn.ratio) ? ` and the ${fmtPct(pdn.quotaCap)} quota ceiling (cl.3 ¶3)` : ""}. Maximum affordable amount at this term: ${fmtUZS(pdn.maxAffordableAmount)}.`);
   } else if (band.band === "high") { rec = "refer"; reasons.push(`Risk score ${fmtPct(probability)} — above the referral threshold; committee review.`); }
   else if (band.band === "medium" || medFails.length) { rec = "approve"; reasons.push(medFails.length ? `Approve with conditions: ${medFails.map((c) => c.title).join("; ")}.` : "Elevated risk score: approve with standard monitoring."); }
   else { rec = "approve"; reasons.push("ПДН within cap, low risk score, no integrity findings."); }
-  if (pdn.exempt) reasons.push(`ПДН cap not applicable: ${pdn.exemptReason} (${pdn.exemptCitation}).`);
-  if (features.months_observed < 12) reasons.push(`Only ${features.months_observed} of 12 months observed — request the missing statements before final decision.`);
+  if (pdn.exempt) reasons.push(`ПДН requirements not applicable: ${pdn.exemptReason} (cl.4).`);
+  if (pdn.newSelfEmployedEligible) reasons.push("Self-employed registration is under 6 months old: eligible for issue without the ratio inside the bank's 15% quota (cl.3 ¶4) — bank-level decision.");
+  if (features.months_observed < 12 && pdn.status !== "insufficient_history") reasons.push(`Only ${features.months_observed} of 12 months observed — request the missing statements before final decision.`);
   // (months_observed is registered as a fact by the memo builder so the verifier accepts it)
 
   const memo = buildMemo({ inp, months, series, features, pdn, probability, band, attributions: attr, checks, recommendation: rec, reasons });

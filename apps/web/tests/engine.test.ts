@@ -3,7 +3,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { computeFeatures, FEATURE_NAMES, last12Months, monthlySeries } from "../lib/features";
 import { predictProbability, type FeatureStats, type RiskModel } from "../lib/risk";
-import { computePdn, normalisePayment, BRV_UZS } from "../lib/rules/pdn";
+import { computePdn, normalisePayment } from "../lib/rules/pdn";
 import { categorizeAll, categorizeOne } from "../lib/categorize";
 import { parseTableRows } from "../lib/parse/table";
 import { parseAmount, parseDate } from "../lib/parse/common";
@@ -62,22 +62,27 @@ describe("rule-based categoriser vs ground-truth labels", () => {
   });
 });
 
-describe("ПДН rule engine (lex.uz/docs/4654149 as amended)", () => {
+describe("ПДН rule engine — CBU Regulation No. 3618 for banks (lex.uz/uz/docs/7491592)", () => {
   const income = Array(12).fill(5_000_000);
   const req = { amount: 30_000_000, term_months: 24, annual_rate: 0.28, product: "express" as const };
-  it("computes the ratio and the 50% cap", () => {
+  it("computes the ratio against the 50% limit (cl.3 ¶1)", () => {
     const r = computePdn({ monthlyIncome: income, existingLoans: [], request: req });
     expect(r.meanIncome).toBe(5_000_000);
+    expect(r.monthsUsed).toBe(12);
     expect(r.ratio).toBeCloseTo(r.newPayment / 5_000_000, 10);
     expect(r.passes).toBe(r.ratio <= 0.5);
+    expect(r.status).toBe(r.ratio <= 0.5 ? "pass" : r.ratio <= 1 ? "quota" : "fail");
     expect(r.maxAffordableAmount).toBeGreaterThan(0);
+    expect(r.citations).toEqual(expect.arrayContaining(["definition", "cap", "income", "accountInflows", "evidence", "calcDate"]));
   });
-  it("spreads terms over 36 months per cl.4¹", () => {
+  it("spreads long terms over 36 (microloan) / 60 (loan) / 180 (mortgage) months (cl.8)", () => {
     expect(normalisePayment(1_000_000, 48)).toBeCloseTo(1_333_333.33, 0);
     expect(normalisePayment(1_000_000, 36)).toBe(1_000_000);
-    expect(normalisePayment(1_000_000, 200, true)).toBeCloseTo(1_111_111.11, 0);
+    expect(normalisePayment(1_000_000, 48, "loan")).toBe(1_000_000);
+    expect(normalisePayment(1_000_000, 72, "loan")).toBeCloseTo(1_200_000, 0);
+    expect(normalisePayment(1_000_000, 200, "mortgage")).toBeCloseTo(1_111_111.11, 0);
   });
-  it("counts guarantor loans only when > 30 days overdue", () => {
+  it("counts guarantor loans only when > 30 days overdue (cl.7)", () => {
     const g = (dpd: number): ExistingLoan => ({ id: "g", lender: "X", monthly_payment: 1_000_000, term_months: 12, outstanding_principal: 5_000_000, days_past_due: dpd, role: "guarantor", source: "manual" });
     const a = computePdn({ monthlyIncome: income, existingLoans: [g(0)], request: req });
     const b = computePdn({ monthlyIncome: income, existingLoans: [g(45)], request: req });
@@ -85,40 +90,57 @@ describe("ПДН rule engine (lex.uz/docs/4654149 as amended)", () => {
     expect(b.existingPayments[0].value).toBe(1_000_000);
     expect(b.ratio).toBeGreaterThan(a.ratio);
   });
-  it("applies the small-loan exclusions only to MFOs/pawnshops (50 BRV; 75 BRV MFO + self-employed) — never to banks", () => {
+  it("has no small-loan or BRV exclusion for a bank; 50–100% is quota-only (cl.3 ¶3); family-programme loans are exempt (cl.4)", () => {
     const inc = Array(12).fill(1_000_000);
-    const bankSmall = computePdn({ lenderType: "bank", monthlyIncome: inc, existingLoans: [], request: { ...req, amount: 40 * BRV_UZS, term_months: 12 } });
-    expect(bankSmall.exempt).toBe(false); expect(bankSmall.passes).toBe(bankSmall.ratio <= 0.5); expect(bankSmall.citations).toContain("portfolioAllowance");
-    const defaultIsBank = computePdn({ monthlyIncome: inc, existingLoans: [], request: { ...req, amount: 40 * BRV_UZS, term_months: 12 } });
-    expect(defaultIsBank.exempt).toBe(false);
-    const mfoSmall = computePdn({ lenderType: "mfo", monthlyIncome: inc, existingLoans: [], request: { ...req, amount: 40 * BRV_UZS, term_months: 12 } });
-    expect(mfoSmall.exempt).toBe(true); expect(mfoSmall.exemptCitation).toBe("smallLoan"); expect(mfoSmall.passes).toBe(true);
-    const mfo60 = computePdn({ lenderType: "mfo", monthlyIncome: inc, existingLoans: [], request: { ...req, amount: 60 * BRV_UZS, term_months: 12 } });
-    expect(mfo60.exempt).toBe(false);
-    const mfo60se = computePdn({ lenderType: "mfo", selfEmployed: true, monthlyIncome: inc, existingLoans: [], request: { ...req, amount: 60 * BRV_UZS, term_months: 12 } });
-    expect(mfo60se.exempt).toBe(true);
-    const pawn = computePdn({ lenderType: "pawnshop", selfEmployed: true, monthlyIncome: inc, existingLoans: [], request: { ...req, amount: 60 * BRV_UZS, term_months: 12 } });
-    expect(pawn.exempt).toBe(false);
-    const fam = computePdn({ monthlyIncome: inc, existingLoans: [], request: { ...req, product: "family_program" } });
-    expect(fam.exempt).toBe(true); expect(fam.exemptCitation).toBe("familyExempt");
+    const small = computePdn({ monthlyIncome: inc, existingLoans: [], request: { ...req, amount: 5_000_000, term_months: 12 } });
+    expect(small.exempt).toBe(false); expect(small.passes).toBe(small.ratio <= 0.5);
+    const mid = computePdn({ monthlyIncome: inc, existingLoans: [], request: { ...req, amount: 8_000_000, term_months: 12 } });
+    expect(mid.ratio).toBeGreaterThan(0.5); expect(mid.ratio).toBeLessThanOrEqual(1);
+    expect(mid.status).toBe("quota"); expect(mid.withinQuota).toBe(true); expect(mid.passes).toBe(false); expect(mid.citations).toContain("quota100");
+    const big = computePdn({ monthlyIncome: inc, existingLoans: [], request: { ...req, amount: 40_000_000, term_months: 12 } });
+    expect(big.ratio).toBeGreaterThan(1); expect(big.status).toBe("fail"); expect(big.withinQuota).toBe(false);
+    const fam = computePdn({ monthlyIncome: inc, existingLoans: [], request: { ...req, amount: 40_000_000, product: "family_program" } });
+    expect(fam.exempt).toBe(true); expect(fam.exemptCitation).toBe("exempt"); expect(fam.status).toBe("exempt"); expect(fam.passes).toBe(true);
   });
-  it("adds co-borrower income to the base (cl.7)", () => {
+  it("flags a self-employed registration under 6 months old for the cl.3 ¶4 quota, and not an older one", () => {
+    const young = computePdn({ monthlyIncome: income, existingLoans: [], request: req, selfEmployedRegisteredSince: "2026-06-20", applicationDate: "2026-10-10" });
+    expect(young.newSelfEmployedEligible).toBe(true); expect(young.citations).toContain("newSelfEmployed");
+    const old = computePdn({ monthlyIncome: income, existingLoans: [], request: req, selfEmployedRegisteredSince: "2025-06-20", applicationDate: "2026-10-10" });
+    expect(old.newSelfEmployedEligible).toBe(false);
+    const exact = computePdn({ monthlyIncome: income, existingLoans: [], request: req, selfEmployedRegisteredSince: "2026-04-10", applicationDate: "2026-10-10" });
+    expect(exact.newSelfEmployedEligible).toBe(false);   // exactly six months is not "less than six months"
+  });
+  it("averages over 6–11 months when fewer than 12 exist, and marks under 6 as insufficient (cl.13)", () => {
+    const nine = computePdn({ monthlyIncome: [0, 0, 0, 3, 3, 3, 3, 3, 3, 3, 3, 3].map((x) => x * 1_000_000), monthsObserved: 9, existingLoans: [], request: req });
+    expect(nine.monthsUsed).toBe(9); expect(nine.meanIncome).toBe(3_000_000); expect(nine.status).not.toBe("insufficient_history");
+    expect(nine.warnings.some((w) => /one-ninth/.test(w))).toBe(true);
+    const four = computePdn({ monthlyIncome: [3_000_000, 3_000_000, 3_000_000, 3_000_000], monthsObserved: 4, existingLoans: [], request: req });
+    expect(four.status).toBe("insufficient_history");
+  });
+  it("uses the median only when asked and only when it is lower than the mean (cl.14)", () => {
+    const skewed = [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 30].map((x) => x * 1_000_000);
+    const mean = computePdn({ monthlyIncome: skewed, existingLoans: [], request: req });
+    const med = computePdn({ monthlyIncome: skewed, useMedian: true, existingLoans: [], request: req });
+    expect(mean.medianUsed).toBe(false); expect(mean.meanIncome).toBeCloseTo(41_000_000 / 12, 2);
+    expect(med.medianUsed).toBe(true); expect(med.meanIncome).toBe(1_000_000); expect(med.ratio).toBeGreaterThan(mean.ratio); expect(med.citations).toContain("median");
+    const flat = computePdn({ monthlyIncome: income, useMedian: true, existingLoans: [], request: req });
+    expect(flat.medianUsed).toBe(false);
+  });
+  it("adds co-borrower income to the base (cl.18)", () => {
     const a = computePdn({ monthlyIncome: income, existingLoans: [], request: req });
     const b = computePdn({ monthlyIncome: income, coBorrowerMonthlyIncome: 5_000_000, existingLoans: [], request: req });
     expect(b.ratio).toBeCloseTo(a.ratio / 2, 10);
   });
-  it("max affordable amount lands exactly at the cap", () => {
+  it("max affordable amount lands exactly at the 50% limit", () => {
     const r = computePdn({ monthlyIncome: income, existingLoans: [], request: req });
     const at = computePdn({ monthlyIncome: income, existingLoans: [], request: { ...req, amount: r.maxAffordableAmount } });
     expect(at.ratio).toBeLessThanOrEqual(0.5);
     const over = computePdn({ monthlyIncome: income, existingLoans: [], request: { ...req, amount: r.maxAffordableAmount + 200_000 } });
     expect(over.ratio).toBeGreaterThan(0.5);
   });
-  it("warns with fewer than 12 months and handles zero income", () => {
-    const r = computePdn({ monthlyIncome: [1, 2, 3], existingLoans: [], request: req });
-    expect(r.warnings.filter((w) => !w.startsWith("Bank lender")).length).toBe(1);
+  it("handles zero income", () => {
     const z = computePdn({ monthlyIncome: [], existingLoans: [], request: req });
-    expect(z.ratio).toBe(Number.POSITIVE_INFINITY); expect(z.passes).toBe(false); expect(z.maxAffordableAmount).toBe(0);
+    expect(z.ratio).toBe(Number.POSITIVE_INFINITY); expect(z.passes).toBe(false); expect(z.maxAffordableAmount).toBe(0); expect(z.status).toBe("no_income");
   });
 });
 
@@ -168,7 +190,7 @@ describe("end-to-end case on fixture + memo verifier", () => {
 });
 
 describe("memo verifier sweep — every scenario must verify", () => {
-  it("verifies across amounts, terms, products and borrowers (incl. 50-BRV exemption, family programme, refer/decline)", () => {
+  it("verifies across amounts, terms, products and borrowers (incl. family-programme exemption, quota band, refer/decline)", () => {
     const products = ["ommabop", "express", "business_online", "family_program"] as const;
     const amounts = [3_000_000, 15_000_000, 25_000_000, 60_000_000, 100_000_000];
     const terms = [12, 36, 60];
