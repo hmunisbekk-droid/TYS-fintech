@@ -48,7 +48,7 @@ export default function About() {
 
       <div className="card">
         <h2>Team TYS</h2>
-        <p className="small">Munisbek — technical lead (pipeline, model, deployment). Jahongir — research and data (regulation mapping, synthetic-data calibration, evaluation). Umida — compliance and business case (ПДН rules, data-protection design, pilot budget and ROI, deck).</p>
+        <p className="small">Three members. Technical lead — pipeline, model, deployment. Research and data — regulation mapping, synthetic-data calibration, evaluation. Compliance and business case — ПДН rules, data-protection design, pilot budget and ROI, deck.</p>
       </div>
     </main>
   );

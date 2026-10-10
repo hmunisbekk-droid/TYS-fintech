@@ -131,6 +131,6 @@ CBU regulation texts are public legal information (lex.uz).
 
 ## Team
 
-Munisbek — technical lead (pipeline, model, deployment) · Jahongir — research and data (regulation mapping, synthetic-data calibration, evaluation) · Umida — compliance and business case (ПДН rules, data-protection design, pilot budget and ROI, deck).
+Three members. Technical lead — pipeline, model, deployment · Research and data — regulation mapping, synthetic-data calibration, evaluation · Compliance and business case — ПДН rules, data-protection design, pilot budget and ROI, deck.
 
 MIT License — see `LICENSE`.

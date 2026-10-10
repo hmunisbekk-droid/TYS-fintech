@@ -91,7 +91,7 @@ const pct = (v, d = 1) => (v * 100).toFixed(d) + "%";
   s.addText("Income evidence for borrowers who have no payslip", { x: 0.7, y: 2.7, w: 11, h: 0.8, fontSize: 28, color: HEX.lt2, margin: 0, isTextBox: true, objectName: "tagline" });
   s.addShape(pres.ShapeType.roundRect, { x: 0.7, y: 3.8, w: 7.6, h: 0.6, fill: { color: HEX.accent2 }, line: { color: HEX.accent2 }, rectRadius: 0.1, objectName: "mode pill" });
   s.addText("Mode: Partner product — MKBANK, micro & family-business credit department", { x: 0.85, y: 3.8, w: 7.4, h: 0.6, fontSize: 15, bold: true, color: HEX.dk1, margin: 0, isTextBox: true, valign: "middle", objectName: "mode" });
-  s.addText([{ text: "Team TYS  ", options: { bold: true } }, { text: "Munisbek (technical lead) · Jahongir (research & data) · Umida (compliance & business case)" }],
+  s.addText([{ text: "Team TYS  ", options: { bold: true } }, { text: "three members — technical lead · research & data · compliance & business case" }],
     { x: 0.7, y: 4.7, w: 11.5, h: 0.5, fontSize: 15, color: HEX.lt2, margin: 0, isTextBox: true, objectName: "team" });
   s.addText([{ text: "Live prototype  ", options: { bold: true } }, { text: SITE + "    " }, { text: "Repository  ", options: { bold: true } }, { text: REPO }],
     { x: 0.7, y: 5.3, w: 12, h: 0.5, fontSize: 13, color: HEX.accent6, margin: 0, isTextBox: true, objectName: "links" });
@@ -264,7 +264,7 @@ const pct = (v, d = 1) => (v * 100).toFixed(d) + "%";
   pres.addSection({ title: "Closing" });
   s = slide("DARK", "Closing", "Daromad");
   s.addText("Income evidence for borrowers who have no payslip — regulation-native, perimeter-native, verified.", { placeholder: "body" });
-  s.addText([{ text: "Live:  ", options: { bold: true } }, { text: SITE + "\n" }, { text: "Repo:  ", options: { bold: true } }, { text: REPO + "\n" }, { text: "Team TYS:  ", options: { bold: true } }, { text: "Munisbek · Jahongir · Umida" }],
+  s.addText([{ text: "Live:  ", options: { bold: true } }, { text: SITE + "\n" }, { text: "Repo:  ", options: { bold: true } }, { text: REPO + "\n" }, { text: "Team TYS", options: { bold: true } }],
     { x: 0.7, y: 5.0, w: 11.9, h: 1.5, fontSize: 15, color: HEX.accent6, margin: 0, isTextBox: true, objectName: "closing links" });
 
   // Appendix

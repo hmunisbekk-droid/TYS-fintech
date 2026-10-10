@@ -53,7 +53,7 @@ const children = [];
 children.push(new Paragraph({ spacing: { before: 1200, after: 120 }, children: [new TextRun({ text: "Daromad", font: HFONT, size: 72, bold: true, color: GREEN })] }));
 children.push(new Paragraph({ spacing: { after: 80 }, children: [new TextRun({ text: "Income Evidence Engine for thin-file borrowers", font: HFONT, size: 32, color: GREEN })] }));
 children.push(new Paragraph({ spacing: { after: 600 }, border: { bottom: { style: BorderStyle.SINGLE, size: 12, color: GOLD, space: 6 } }, children: [new TextRun({ text: "Our project explained step by step, in simple words", font: FONT, size: 26, color: GREY })] }));
-children.push(P([B("Team TYS"), " — Munisbek (technical lead), Jahongir (research and data), Umida (compliance and business case)"]));
+children.push(P([B("Team TYS"), " — three members: technical lead, research and data, compliance and business case"]));
 children.push(P(["FinTech / AI in Finance hackathon final · Partner product for MKBANK · Uzbekistan, October 2026"]));
 children.push(gap());
 children.push(P([B("Live prototype: "), link("https://tys-fintech.vercel.app")]));
@@ -186,13 +186,13 @@ children.push(callout([B("One line to remember: "), "Daromad turns the statement
 children.push(H1("Part E — Team, links and glossary"));
 children.push(H2("10. Who did what"));
 children.push(table(
-  ["Team member", "Role", "Responsible for"],
+  ["Role", "Responsible for"],
   [
-    ["Munisbek", "Technical lead", "Document parsers and OCR, feature pipeline, risk model, web application, tests, GitHub and Vercel deployment, live demo"],
-    ["Jahongir", "Research and data", "Regulation mapping and quotes, public anchors (wages, BRV, MKBANK figures), synthetic-data calibration, Berka validation, evaluation numbers"],
-    ["Umida", "Compliance and business case", "ПДН rules and exemptions, data-protection design, pilot budget and ROI, defence deck and script"],
+    ["Technical lead", "Document parsers and OCR, feature pipeline, risk model, web application, tests, GitHub and Vercel deployment, live demo"],
+    ["Research and data", "Regulation mapping and quotes, public anchors (wages, BRV, MKBANK figures), synthetic-data calibration, Berka validation, evaluation numbers"],
+    ["Compliance and business case", "ПДН rules and exemptions, data-protection design, pilot budget and ROI, defence deck"],
   ],
-  [1800, 2200, 5026],
+  [2600, 6426],
 ));
 children.push(gap());
 
