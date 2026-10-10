@@ -92,11 +92,12 @@ and export the case with its audit chain.
 |---|---|---|
 | Statement parsing, 60 synthetic PDFs (2 layouts, RU/UZ labels) | row count exact on 60/60, balance chain reconciles on 60/60, ~1.6 s per 12-month PDF | `public/model/statement_eval.json` |
 | Tamper detection (inflated inflow, deleted debit, duplicated row, window dressing) | 40/40 caught (10/10 per type); 0 false positives on the 60 clean statements | `public/model/statement_eval.json` |
+| **Unseen layouts** (signed-amount RU CSV, Kirim/Chiqim XLSX, quoted EN CSV + Type column, Unicode-minus CSV, headerless CSV, Приход/Расход TSV) | 6/6 exact row counts and credit/debit totals | `public/model/ood_eval.json` (written by `tests/ood.test.ts`) |
 | Receipt OCR on 60 camera-augmented photos (uzb+rus+eng, in-browser) | total 95%, INN 100%, date 97%, receipt № 98%, 1.6 s each | `public/model/ocr_eval.json` |
 | Transaction categoriser vs ground truth (10,481 synthetic lines) | 99.96% (synthetic vocabulary — will be lower on real data) | `public/model/categorizer_eval.json` |
 | Risk model, synthetic holdout (n=500) | ROC-AUC 0.965, PR-AUC 0.76, Brier 0.042; logistic 0.963; ПДН alone 0.948 | `public/model/metrics.json` |
 | Methodology check on real anonymised bank data (Berka, 443 loans, 5-fold) | ROC-AUC 0.902 (boosted), 0.895 (logistic), 0.735 (ratio alone) | `public/model/berka_metrics.json` |
-| Memo faithfulness | 0 unsourced numbers on every sample case (verifier enforced at runtime) | e2e |
+| Memo faithfulness | 0 unsourced numbers across a 300-scenario sweep (5 borrowers × 4 products × 5 amounts × 3 terms, incl. 50-BRV and family-programme exemptions, refer/decline) | `tests/engine.test.ts` |
 | Cost per application | zero marginal (static hosting, no API, no GPU) | — |
 
 Honest caveats: the risk model is trained on a **declared synthetic population** (`data/synthetic/summary.json`);
@@ -110,6 +111,12 @@ See `docs/DATA_SOURCES.md` for the full table. Summary: all borrower data is syn
 declared); the Berka/PKDD'99 data set is used only for an offline methodology check and is not redistributed;
 Tesseract language data, tesseract.js, pdf.js, SheetJS, XGBoost, scikit-learn, Next.js and React are Apache-2.0/BSD/MIT;
 CBU regulation texts are public legal information (lex.uz).
+
+## Known items
+
+- `xlsx` (SheetJS) is pinned at 0.18.5, the last version on the npm registry, which carries two advisories (prototype pollution, ReDoS) in the CSV/XLSX reader. The fix is the vendor build: `cd apps/web && npm install https://cdn.sheetjs.com/xlsx-0.20.3/xlsx-0.20.3.tgz` — same API. Our build environment could not reach cdn.sheetjs.com, so this is done on a developer machine before the pilot; in production uploads are parsed inside the bank's perimeter only.
+- BRV is a configuration constant (`apps/web/lib/rules/pdn.ts`, `synth/archetypes.py`): 440,000 UZS from 1 Sep 2026.
+- Scanned statements without a text layer are not OCR'd page by page (use the XLSX/CSV export).
 
 ## Rules compliance
 
