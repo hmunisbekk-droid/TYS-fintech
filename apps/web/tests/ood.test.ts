@@ -1,5 +1,5 @@
 // Out-of-distribution statement layouts the parser was never tuned on. Rows come from a fixture borrower
-// (ground truth), rendered into six formats a bank or wallet might export. Writes public/model/ood_eval.json.
+// (ground truth), rendered into eight formats a bank or wallet might export. Writes public/model/ood_eval.json.
 import { describe, expect, it } from "vitest";
 import fs from "node:fs";
 import path from "node:path";
@@ -43,13 +43,22 @@ const layouts: { name: string; build: () => Promise<{ n: number; credit: number;
       const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(aoa), "Transactions");
       const buf = XLSX.write(wb, { type: "array", bookType: "xlsx" }) as ArrayBuffer;
       return summarise(await parseXlsx("ood7", "wallet.xlsx", buf)); } },
+  { name: "RU bank CSV with TWO date columns (Дата операции / Дата проводки, posting lags 0–2 days), № документа and 20-digit Счёт корреспондента columns, Дебет/Кредит/Остаток", build: async () => {
+      const lag = (d: string, i: number) => { const x = new Date(d + "T00:00:00Z"); x.setUTCDate(x.getUTCDate() + [0, 0, 0, 0, 0, 0, 1, 1, 1, 2][i % 10]); return x.toISOString().slice(0, 10); };
+      const text = ["Дата операции; Дата проводки; № документа; Счёт корреспондента; Назначение платежа; Дебет; Кредит; Остаток",
+        ...rows.map((r, i) => `${dmy(r.date)}; ${dmy(lag(r.date, i))}; ${100000 + i * 13}; ${i % 3 ? "" : "2020" + String(8100 + i).padStart(4, "0") + String(123456789012 + i * 7919).padStart(12, "0")}; ${r.description}; ${r.debit ? ru(r.debit) : ""}; ${r.credit ? ru(r.credit) : ""}; ${ru(r.balance)}`)].join("\n");
+      const d = await parseCsv("ood8", "twodate.csv", text);
+      // the operation date (first column) must be kept: every parsed date equals the ground-truth date
+      const dateMismatch = d.transactions.filter((t, i) => t.date !== rows[i]?.date).length;
+      const s = summarise(d); if (dateMismatch) s.warnings.push(`${dateMismatch} rows took the posting date instead of the operation date`);
+      return { ...s, n: dateMismatch ? -1 : s.n }; } },
 ];
 function summarise(d: { transactions: { credit: number; debit: number }[]; warnings: string[] }) {
   return { n: d.transactions.length, credit: d.transactions.reduce((a, t) => a + t.credit, 0), debit: d.transactions.reduce((a, t) => a + t.debit, 0), warnings: d.warnings };
 }
 
 describe("out-of-distribution statement layouts", () => {
-  it("parses seven unseen layouts with exact row counts and totals", async () => {
+  it("parses eight unseen layouts with exact row counts and totals", async () => {
     const results = [];
     for (const l of layouts) {
       const r = await l.build();
@@ -58,7 +67,7 @@ describe("out-of-distribution statement layouts", () => {
     }
     fs.writeFileSync(path.join(here, "../public/model/ood_eval.json"), JSON.stringify({ truth: { rows: truth.n, credit: Math.round(truth.credit), debit: Math.round(truth.debit) }, layouts: results,
       exact_count: results.filter((r) => r.exact).length, n: results.length,
-      note: "Seven statement layouts the parser was never tuned on, built from a fixture borrower's ground-truth rows; written by tests/ood.test.ts." }, null, 1));
+      note: "Eight statement layouts the parser was never tuned on, built from a fixture borrower's ground-truth rows; written by tests/ood.test.ts." }, null, 1));
     for (const r of results) expect(r.exact, `${r.layout}: ${r.rows}/${r.rows_truth} rows, credit ${r.credit} vs ${Math.round(truth.credit)}, debit ${r.debit} vs ${Math.round(truth.debit)} ${r.warnings.join(" | ")}`).toBe(true);
   });
 });

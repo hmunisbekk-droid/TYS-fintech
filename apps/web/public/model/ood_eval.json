@@ -75,9 +75,18 @@
    "warnings": [
     "1 row(s) with a failed/cancelled status were ignored."
    ]
+  },
+  {
+   "layout": "RU bank CSV with TWO date columns (Дата операции / Дата проводки, posting lags 0–2 days), № документа and 20-digit Счёт корреспондента columns, Дебет/Кредит/Остаток",
+   "rows": 400,
+   "rows_truth": 400,
+   "credit": 30046000,
+   "debit": 25922000,
+   "exact": true,
+   "warnings": []
   }
  ],
- "exact_count": 7,
- "n": 7,
- "note": "Seven statement layouts the parser was never tuned on, built from a fixture borrower's ground-truth rows; written by tests/ood.test.ts."
+ "exact_count": 8,
+ "n": 8,
+ "note": "Eight statement layouts the parser was never tuned on, built from a fixture borrower's ground-truth rows; written by tests/ood.test.ts."
 }

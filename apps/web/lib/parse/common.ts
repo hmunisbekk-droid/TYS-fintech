@@ -1,4 +1,6 @@
 // Shared parsing helpers: dates, amounts, header detection, debit/credit inference.
+/** Bumped whenever statement/receipt parsing changes, so audit entries can be told apart. */
+export const PARSER_VERSION = "parse-2026.10.11";
 import type { Transaction } from "../types";
 
 export const DATE_RES: { re: RegExp; order: "ymd" | "dmy" }[] = [

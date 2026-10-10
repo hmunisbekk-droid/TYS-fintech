@@ -28,7 +28,7 @@ export function parseTableRows(docId: string, rows: Cell[][]): { txs: Transactio
     r.forEach((c, j) => {
       if (typeof c !== "string") return;
       const s = c.trim();
-      if (HEADER_WORDS.date.test(s)) m.date = j;
+      if (HEADER_WORDS.date.test(s)) { if (m.date === undefined) m.date = j; }   // first date column wins (Дата операции before Дата проводки)
       else if (HEADER_WORDS.time.test(s)) m.time = j;
       else if (HEADER_WORDS.status.test(s)) m.status = j;
       else if (HEADER_WORDS.debit.test(s)) m.debit = j;

@@ -11,6 +11,39 @@ async function loadPdfjs() {
   return pdfjs;
 }
 
+/** Group pdf.js text items of one page into lines (same y within 2.5 units), tokens sorted by x. Pure; shared with the Node tests. */
+export function groupTokens(items: { str: string; transform: number[]; width: number }[], page: number): Line[] {
+  const lines: Line[] = [];
+  const toks: Tok[] = [];
+  for (const it of items) {
+    if (!it.str || !it.str.trim()) continue;
+    toks.push({ str: it.str, x: it.transform[4], y: it.transform[5], w: it.width });
+  }
+  toks.sort((a, b) => b.y - a.y || a.x - b.x);
+  let cur: Tok[] = [], curY = Number.NaN;
+  const flush = () => {
+    if (!cur.length) return;
+    cur.sort((a, b) => a.x - b.x);
+    // merge tokens that are adjacent into one token (pdf.js splits words sometimes)
+    const merged: Tok[] = [];
+    for (const t of cur) {
+      const last = merged[merged.length - 1];
+      const numericT = parseAmount(t.str.trim()) !== null, numericLast = !!last && parseAmount(last.str.trim()) !== null;
+      if (last && t.x - (last.x + last.w) < 1.2 && !/^\s/.test(t.str) && !/\s$/.test(last.str) && !numericT && !numericLast) {
+        last.str += t.str; last.w = t.x + t.w - last.x;
+      } else merged.push({ ...t });
+    }
+    lines.push({ y: curY, toks: merged, text: merged.map((t) => t.str).join("  "), page });
+    cur = [];
+  };
+  for (const t of toks) {
+    if (Number.isNaN(curY) || Math.abs(t.y - curY) > 2.5) { flush(); curY = t.y; }
+    cur.push(t);
+  }
+  flush();
+  return lines;
+}
+
 export async function extractLines(data: ArrayBuffer): Promise<{ lines: Line[]; pages: number }> {
   const pdfjs = await loadPdfjs();
   const doc = await pdfjs.getDocument({ data }).promise;
@@ -18,59 +51,46 @@ export async function extractLines(data: ArrayBuffer): Promise<{ lines: Line[]; 
   for (let p = 1; p <= doc.numPages; p++) {
     const page = await doc.getPage(p);
     const content = await page.getTextContent();
-    const toks: Tok[] = [];
-    for (const it of content.items as { str: string; transform: number[]; width: number }[]) {
-      if (!it.str || !it.str.trim()) continue;
-      toks.push({ str: it.str, x: it.transform[4], y: it.transform[5], w: it.width });
-    }
-    // group by y (within 2.5 units), sort by x
-    toks.sort((a, b) => b.y - a.y || a.x - b.x);
-    let cur: Tok[] = [], curY = Number.NaN;
-    const flush = () => {
-      if (!cur.length) return;
-      cur.sort((a, b) => a.x - b.x);
-      // merge tokens that are adjacent into one token (pdf.js splits words sometimes)
-      const merged: Tok[] = [];
-      for (const t of cur) {
-        const last = merged[merged.length - 1];
-        const numericT = parseAmount(t.str.trim()) !== null, numericLast = !!last && parseAmount(last.str.trim()) !== null;
-        if (last && t.x - (last.x + last.w) < 1.2 && !/^\s/.test(t.str) && !/\s$/.test(last.str) && !numericT && !numericLast) {
-          last.str += t.str; last.w = t.x + t.w - last.x;
-        } else merged.push({ ...t });
-      }
-      lines.push({ y: curY, toks: merged, text: merged.map((t) => t.str).join("  "), page: p });
-      cur = [];
-    };
-    for (const t of toks) {
-      if (Number.isNaN(curY) || Math.abs(t.y - curY) > 2.5) { flush(); curY = t.y; }
-      cur.push(t);
-    }
-    flush();
+    lines.push(...groupTokens(content.items as { str: string; transform: number[]; width: number }[], p));
   }
   return { lines, pages: doc.numPages };
 }
 
-/** Column model: header labels (by x order) + numeric-column clusters learned from the data rows. */
-interface Columns { debitX?: number; creditX?: number; balanceX?: number; amountX?: number }
+/** Column model: every header token with its label and horizontal span + numeric-column clusters learned from the data rows. */
+type ColLabel = "debit" | "credit" | "balance" | "amount" | "date" | "other";
+interface HeaderTok { label: ColLabel; left: number; right: number; x: number; str: string }
+const VALUE_LABELS: ColLabel[] = ["debit", "credit", "balance", "amount"];
 
-function detectHeader(lines: Line[]): { cols: Columns; headerIndex: number; order: { label: string; x: number }[] } {
+function classifyHeader(s: string): ColLabel {
+  if (HEADER_WORDS.debit.test(s)) return "debit";
+  if (HEADER_WORDS.credit.test(s)) return "credit";
+  if (HEADER_WORDS.balance.test(s)) return "balance";
+  if (HEADER_WORDS.amount.test(s)) return "amount";
+  if (HEADER_WORDS.date.test(s)) return "date";
+  return "other";
+}
+
+/** A pure date token ("01.03.2026", "2026-03-01", optionally followed by a time). Dates inside free text are not. */
+const DATE_TOKEN = /^(20\d{2}[-./]\d{1,2}[-./]\d{1,2}|\d{1,2}[-./]\d{1,2}[-./]20\d{2})(\s+\d{1,2}:\d{2}(:\d{2})?)?$/;
+const TIME_TOKEN = /^\d{1,2}:\d{2}(:\d{2})?$/;
+/** Digit-only identifiers (account numbers, card numbers, long document ids) are never amounts. */
+const IDENTIFIER = /^\d{12,}$/;
+const DATE_ANY = /\b(20\d{2}[-./]\d{1,2}[-./]\d{1,2}|\d{1,2}[-./]\d{1,2}[-./]20\d{2})\b/g;
+
+function isAmountToken(s: string): boolean {
+  if (DATE_TOKEN.test(s) || TIME_TOKEN.test(s) || IDENTIFIER.test(s)) return false;
+  return parseAmount(s) !== null && /\d/.test(s) && s.length >= 3 && !/^\d{4}$/.test(s);
+}
+
+function detectHeader(lines: Line[]): { headerIndex: number; header: HeaderTok[] } {
   for (let i = 0; i < Math.min(lines.length, 80); i++) {
     const l = lines[i];
-    const cols: Columns = {};
-    const order: { label: string; x: number }[] = [];
-    let hits = 0;
-    for (const t of l.toks) {
-      const s = t.str.trim();
-      const cx = t.x + t.w / 2;
-      if (HEADER_WORDS.debit.test(s)) { cols.debitX = cx; order.push({ label: "debit", x: cx }); hits++; }
-      else if (HEADER_WORDS.credit.test(s)) { cols.creditX = cx; order.push({ label: "credit", x: cx }); hits++; }
-      else if (HEADER_WORDS.balance.test(s)) { cols.balanceX = cx; order.push({ label: "balance", x: cx }); hits++; }
-      else if (HEADER_WORDS.amount.test(s)) { cols.amountX = cx; order.push({ label: "amount", x: cx }); hits++; }
-      else if (HEADER_WORDS.date.test(s)) hits++;
-    }
-    if (hits >= 3) return { cols, headerIndex: i, order: order.sort((a, b) => a.x - b.x) };
+    const header: HeaderTok[] = l.toks.map((t) => ({ label: classifyHeader(t.str.trim()), left: t.x, right: t.x + t.w, x: t.x + t.w / 2, str: t.str.trim() }));
+    const hits = header.filter((h) => h.label !== "other").length;
+    const hasValue = header.some((h) => h.label === "debit" || h.label === "credit" || h.label === "amount");
+    if (hits >= 3 && hasValue) return { headerIndex: i, header: header.sort((a, b) => a.left - b.left) };
   }
-  return { cols: {}, headerIndex: -1, order: [] };
+  return { headerIndex: -1, header: [] };
 }
 
 /** Cluster the right edges of numeric tokens on data rows into columns (tolerance 12 units). */
@@ -78,15 +98,13 @@ function numericColumns(lines: Line[], headerIndex: number): { right: number; co
   const edges: number[] = [];
   let rows = 0;
   for (let i = 0; i < lines.length; i++) {
-    if (i === headerIndex) continue;
+    if (i === headerIndex || (headerIndex >= 0 && i < headerIndex)) continue;
     const l = lines[i];
     if (!parseDate(l.text)) continue;
     rows++;
     for (const t of l.toks) {
       const s = t.str.trim();
-      if (parseDate(s) || /^\d{1,2}:\d{2}(:\d{2})?$/.test(s)) continue;
-      const v = parseAmount(s);
-      if (v !== null && s.length >= 3 && !/^\d{4}$/.test(s)) edges.push(t.x + t.w);
+      if (isAmountToken(s)) edges.push(t.x + t.w);
     }
   }
   edges.sort((a, b) => a - b);
@@ -100,46 +118,81 @@ function numericColumns(lines: Line[], headerIndex: number): { right: number; co
   return clusters.filter((c) => c.count >= minCount).map((c) => ({ right: c.right, count: c.count }));
 }
 
+/**
+ * Map numeric clusters to column labels. Primary rule: a right-aligned number belongs to the header column whose
+ * left edge is the last one at or left of the number's right edge (column boundaries = header left edges), so extra
+ * numeric columns (document numbers, codes) land on their own "other" header and stay out of debit/credit/balance.
+ * Fallbacks: by order when the value-column count matches; nearest header centre; no header → rightmost = balance.
+ */
+function mapClusters(clusters: { right: number }[], header: HeaderTok[]): Map<number, string> {
+  const labelOf = new Map<number, string>();
+  if (!header.length) { clusters.forEach((c, i) => labelOf.set(i, i === clusters.length - 1 && clusters.length >= 2 ? "balance" : "amount")); return labelOf; }
+  const valueCols = header.filter((h) => VALUE_LABELS.includes(h.label));
+  const byBoundary = new Map<number, string>();
+  clusters.forEach((c, i) => {
+    let k = -1;
+    for (let j = 0; j < header.length; j++) if (header[j].left - 2 <= c.right) k = j;
+    const lab = k >= 0 ? header[k].label : "other";
+    byBoundary.set(i, VALUE_LABELS.includes(lab) ? lab : "unknown");
+  });
+  // a label used twice: keep the cluster nearest to that header's right edge
+  for (const lab of VALUE_LABELS) {
+    const idx = [...byBoundary.entries()].filter(([, v]) => v === lab).map(([k]) => k);
+    if (idx.length > 1) {
+      const h = header.find((x) => x.label === lab)!;
+      idx.sort((a, b) => Math.abs(clusters[a].right - h.right) - Math.abs(clusters[b].right - h.right));
+      idx.slice(1).forEach((k) => byBoundary.set(k, "unknown"));
+    }
+  }
+  const okBoundary = [...byBoundary.values()].some((v) => v === "debit" || v === "credit" || v === "amount");
+  if (okBoundary) return byBoundary;
+  if (valueCols.length && clusters.length === valueCols.length) { clusters.forEach((c, i) => labelOf.set(i, valueCols[i].label)); return labelOf; }
+  clusters.forEach((c, i) => { let best = valueCols[0], bd = Infinity; for (const o of valueCols) { const d = Math.abs(c.right - 25 - o.x); if (d < bd) { bd = d; best = o; } } labelOf.set(i, best ? best.label : "unknown"); });
+  return labelOf;
+}
+
 export function parseStatementLines(docId: string, lines: Line[]): { txs: Transaction[]; holder?: string; cardMask?: string; warnings: string[]; assumedSignRows: number } {
   const warnings: string[] = [];
-  const { headerIndex, order } = detectHeader(lines);
+  const { headerIndex, header } = detectHeader(lines);
   const clusters = numericColumns(lines, headerIndex);
-  // map clusters → labels: by order when counts match, otherwise nearest header centre; no header → rightmost = balance
-  const labelOf = new Map<number, string>();
-  if (order.length && clusters.length === order.length) clusters.forEach((c, i) => labelOf.set(i, order[i].label));
-  else if (order.length) clusters.forEach((c, i) => { let best = order[0], bd = Infinity; for (const o of order) { const d = Math.abs(c.right - 25 - o.x); if (d < bd) { bd = d; best = o; } } labelOf.set(i, best.label); });
-  else clusters.forEach((c, i) => labelOf.set(i, i === clusters.length - 1 && clusters.length >= 2 ? "balance" : "amount"));
+  const labelOf = mapClusters(clusters, header);
   const haveCols = [...labelOf.values()].includes("balance") && ([...labelOf.values()].includes("debit") || [...labelOf.values()].includes("credit"));
   const colOf = (right: number): string => {
     let bi = -1, bd = Infinity;
     clusters.forEach((c, i) => { const d = Math.abs(c.right - right); if (d < bd) { bd = d; bi = i; } });
     return bi >= 0 && bd < 20 ? labelOf.get(bi)! : "unknown";
   };
+  const isHeaderLike = (l: Line) => l.toks.filter((t) => classifyHeader(t.str.trim()) !== "other").length >= 2;
   const rows: { tx: Transaction; amount: number; signed: boolean }[] = [];
   let holder: string | undefined, cardMask: string | undefined;
-  let lineNo = 0, droppedRows = 0;
+  let lineNo = 0, droppedRows = 0, lastRowLine = -1;
   for (let i = 0; i < lines.length; i++) {
     const l = lines[i];
     const text = l.text;
     if (!holder) { const m = text.match(/(Владелец|Egasi|Holder|Card holder|Клиент)\s*:?\s*(.+?)(?:\s{2,}|$)/i); if (m) holder = m[2].trim(); }
     if (!cardMask) { const m = text.match(/(\d{4})\s?\*{4}\s?\*{4}\s?(\d{4})/); if (m) cardMask = `${m[1]} **** **** ${m[2]}`; }
-    const date = parseDate(text);
-    if (!date || i === headerIndex) continue;
+    const date = parseDate(text);                                             // leftmost date = operation date
+    if (!date) {
+      // a wrapped description continues the previous row: next line, same page, no numbers, not a header
+      if (rows.length && i === lastRowLine + 1 && l.page === rows[rows.length - 1].tx.page && !isHeaderLike(l) && !l.toks.some((t) => isAmountToken(t.str.trim()))) {
+        const extra = l.toks.map((t) => t.str.trim()).join(" ").replace(/\s+/g, " ").trim();
+        if (extra && extra.length <= 120) { rows[rows.length - 1].tx.description = `${rows[rows.length - 1].tx.description} ${extra}`.trim(); lastRowLine = i; }
+      }
+      continue;
+    }
+    if (i === headerIndex) continue;
     if (headerIndex >= 0 && i < headerIndex) continue;                       // meta lines above the table (period, dates)
-    if ((text.match(/\b(20\d{2}[-./]\d{1,2}[-./]\d{1,2}|\d{1,2}[-./]\d{1,2}[-./]20\d{2})\b/g) ?? []).length >= 2) continue;  // "Период: … — …"
     const nums: { v: number; x: number }[] = [];
     const descParts: string[] = [];
     let time: string | undefined;
     for (const t of l.toks) {
       const s = t.str.trim();
-      if (parseDate(s) === date && !time) continue;
-      if (/^\d{1,2}:\d{2}(:\d{2})?$/.test(s)) { time = s; continue; }
-      const v = parseAmount(s);
-      if (v !== null && /\d/.test(s) && s.length >= 3 && !/^\d{4}$/.test(s)) nums.push({ v, x: t.x + t.w });
+      if (DATE_TOKEN.test(s)) { const tm = s.match(/(\d{1,2}:\d{2})(:\d{2})?$/); if (tm && !time) time = tm[1]; continue; }   // every date column (operation, posting) is skipped, never an amount
+      if (TIME_TOKEN.test(s)) { if (!time) time = s; continue; }
+      if (isAmountToken(s)) nums.push({ v: parseAmount(s)!, x: t.x + t.w });
       else descParts.push(s);
     }
-    if (!nums.length) { droppedRows++; continue; }
-    lineNo++;
+    if (!nums.length) { if ((text.match(DATE_ANY) ?? []).length < 2) droppedRows++; continue; }   // "Период: … — …" lines are skipped silently
     let debit = 0, credit = 0, balance: number | null = null, amount = 0, signed = false;
     if (clusters.length) {
       for (const n of nums) {
@@ -155,8 +208,11 @@ export function parseStatementLines(docId: string, lines: Line[]): { txs: Transa
       else { amount = nums[0].v; }
       if (amount < 0) { debit = -amount; signed = true; }
     }
+    if (debit === 0 && credit === 0 && amount === 0) { droppedRows++; continue; }   // only identifiers / unknown columns on this line
     const desc = descParts.join(" ").replace(/\s+/g, " ").trim();
+    lineNo++;
     rows.push({ tx: makeTx(docId, l.page, lineNo, date, desc, debit, credit, balance, time, text), amount, signed });
+    lastRowLine = i;
   }
   const unsigned = rows.filter((r) => !r.signed);
   let assumedSignRows = 0;
