@@ -139,8 +139,8 @@ const pct = (v, d = 1) => (v * 100).toFixed(d) + "%";
   s.addText(steps.map((t, i) => ({ text: `${i + 1}.  ${t}`, options: { breakLine: i < steps.length - 1, paraSpaceAfter: 7 } })), { x: 0.6, y: 2.95, w: 6.1, h: 3.9, fontSize: 12.5, color: HEX.dk1, margin: 0, isTextBox: true, valign: "top", objectName: "demo steps" });
   s.addImage({ path: path.join(IMG, "integrity_risk.png"), x: 7.0, y: 1.45, w: 5.8, h: 2.53, objectName: "screenshot integrity" });
   s.addImage({ path: path.join(IMG, "tamper.png"), x: 7.0, y: 4.15, w: 3.4, h: 1.75, objectName: "screenshot tamper" });
-  s.addImage({ path: path.join(IMG, "qr_repo.png"), x: 10.9, y: 4.15, w: 1.75, h: 1.75, objectName: "qr repo" });
-  s.addText("Scan for the repository; the live site link is on the title slide and in the README", { x: 7.0, y: 6.0, w: 5.8, h: 0.5, fontSize: 10, color: HEX.accent4, margin: 0, isTextBox: true, objectName: "qr caption" });
+  s.addImage({ path: path.join(IMG, "qr_site.png"), x: 10.6, y: 4.05, w: 2.0, h: 2.0, objectName: "qr site" });
+  s.addText("Scan to open the live prototype on your phone (New case → Load sample A)", { x: 7.0, y: 6.1, w: 5.8, h: 0.5, fontSize: 10, color: HEX.accent4, margin: 0, isTextBox: true, objectName: "qr caption" });
 
   // 5 — architecture
   pres.addSection({ title: "Technology" });

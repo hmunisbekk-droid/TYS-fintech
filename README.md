@@ -15,7 +15,7 @@ statements (PDF / XLSX / CSV), fiscal receipts (photos), the Soliq self-employed
 Everything runs **inside the browser**: no server, no API keys, no customer byte leaves the device. The
 production design serves the same bundle from the bank's own server (see `docs/ARCHITECTURE.md`).
 
-- Live prototype: **<PASTE VERCEL URL>**
+- Live prototype: **https://tys-fintech.vercel.app**
 - Repository: **https://github.com/hmunisbekk-droid/TYS-fintech**
 - Defence deck: `deck/Daromad_TYS_deck.pptx`
 
