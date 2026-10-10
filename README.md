@@ -5,8 +5,8 @@
 Daromad turns the documents a self-employed or family-business borrower actually has — card and wallet
 statements (PDF / XLSX / CSV), fiscal receipts (photos), the Soliq self-employed certificate — into:
 
-1. a regulator-compliant **12-month income figure** (CBU debt-burden regulation, cl.7 and cl.9),
-2. the **debt-burden ratio (ПДН)** with every clause cited, lender-type rules (bank by default), and the maximum affordable amount back-solved,
+1. a regulator-compliant **income figure** (CBU Regulation No. 3618 for banks: 6–12-month average of account receipts, cl.13 and cl.18, with the cl.14 median option),
+2. the **debt-burden ratio (ПДН)** with every clause cited — the 50% limit, the 50–100% quota band and the new-self-employed quota (cl.3), the cl.4 exemptions, the guarantor rule (cl.7), 36/60/180-month spreading (cl.8) — and the maximum affordable amount back-solved,
 3. an **integrity report** (balance-chain reconciliation, duplicates, coverage, pre-application inflow spikes, circular transfers, cross-document consistency),
 4. an explained **risk score** (gradient-boosted trees with monotone constraints, run in the browser),
 5. a **credit memo** in which every number is traceable to a document line and checked by a faithfulness verifier,
@@ -38,7 +38,7 @@ apps/web/        Next.js 16 app (static export). All document parsing, OCR, rule
 synth/           synthetic data generator (archetypes → 24 months of transactions → PDF/XLSX/CSV statements, receipt photos, certificates, tampered variants)
 ml/              feature spec, training (XGBoost), Berka real-data validation, exported artifacts
 data/synthetic/  generated data set (summary.json committed; regenerate with one command)
-docs/            ARCHITECTURE.md, DATA_SOURCES.md, MODEL_CARD.md, REGULATION_QUOTES.md, Daromad_project_explained.docx
+docs/            ARCHITECTURE.md, DATA_SOURCES.md, MODEL_CARD.md, REGULATION_QUOTES.md, REFERENCES.md (Westminster Harvard), Daromad_project_explained.docx
 deck/            defence deck (build_deck.js reads the evaluation JSON and screenshots)
 .github/workflows/ci.yml   tests + build on every push
 ```
@@ -98,7 +98,7 @@ and export the case with its audit chain.
 | Transaction categoriser vs ground truth (10,481 synthetic lines) | 99.96% (synthetic vocabulary — will be lower on real data) | `public/model/categorizer_eval.json` |
 | Risk model, synthetic holdout (n=500) | ROC-AUC 0.965, PR-AUC 0.76, Brier 0.042; logistic 0.963; ПДН alone 0.948 | `public/model/metrics.json` |
 | Methodology check on real anonymised bank data (Berka, 443 loans, 5-fold) | ROC-AUC 0.902 (boosted), 0.895 (logistic), 0.735 (ratio alone) | `public/model/berka_metrics.json` |
-| Memo faithfulness | 0 unsourced numbers across a 300-scenario sweep (5 borrowers × 4 products × 5 amounts × 3 terms, incl. 50-BRV and family-programme exemptions, refer/decline) | `tests/engine.test.ts` |
+| Memo faithfulness | 0 unsourced numbers across a 300-scenario sweep (5 borrowers × 4 products × 5 amounts × 3 terms, incl. the family-programme exemption, the 50–100% quota band, refer/decline) | `tests/engine.test.ts` |
 | Cost per application | zero marginal (static hosting, no API, no GPU) | — |
 
 Honest caveats: the risk model is trained on a **declared synthetic population** (`data/synthetic/summary.json`);
@@ -108,7 +108,7 @@ perimeter during the pilot — that is the pilot's first deliverable.
 
 ## Data sources and licences
 
-See `docs/DATA_SOURCES.md` for the full table. Summary: all borrower data is synthetic (MIT, this repo, generator
+See `docs/DATA_SOURCES.md` for the full table and `docs/REFERENCES.md` for the reference list (Westminster Harvard). Summary: all borrower data is synthetic (MIT, this repo, generator
 declared); the Berka/PKDD'99 data set is used only for an offline methodology check and is not redistributed;
 Tesseract language data, tesseract.js, pdf.js, SheetJS, XGBoost, scikit-learn, Next.js and React are Apache-2.0/BSD/MIT;
 CBU regulation texts are public legal information (lex.uz).
@@ -116,8 +116,7 @@ CBU regulation texts are public legal information (lex.uz).
 ## Known items
 
 - `xlsx` resolves to SheetJS CE **0.20.3** through the npm alias `xlsx@npm:@e965/xlsx@0.20.3` (an automated, Apache-2.0 republish of the vendor build, because SheetJS stopped publishing to the npm registry at 0.18.5, which carried two advisories). `npm audit --omit=dev` is clean. If cdn.sheetjs.com is reachable, the official tarball is a drop-in: `npm install https://cdn.sheetjs.com/xlsx-0.20.3/xlsx-0.20.3.tgz`.
-- BRV is a configuration constant (`apps/web/lib/rules/pdn.ts`, `synth/archetypes.py`): 440,000 UZS from 1 Sep 2026.
-- Lender type (section 1 of the case page) defaults to **bank**: no small-loan exclusion, the ratio is computed for every application and the bank-level 15% quota is shown as a note. The 50-BRV (MFO/pawnshop) and 75-BRV (MFO + self-employed) exclusions apply only when the lender type is changed.
+- The rule engine implements **CBU Regulation No. 3618** (banks; Board decision 7/3 of 8 April 2025, in force 24 July 2025, amended 5 December 2025 — lex.uz/uz/docs/7491592). Regulation No. 3205 (lex.uz 4654149) has applied only to microfinance organisations and pawnshops since 24 July 2025 and is not used; there are no BRV thresholds for a bank. Clause quotes: `docs/REGULATION_QUOTES.md`.
 - Statements with several date columns (operation date / posting date) use the **first** date column; later date columns are never read as amounts. Digit-only identifiers of 12+ digits (accounts, cards) are never amounts; numeric columns are mapped to debit/credit/balance by header column boundaries, so document-number and code columns stay out of the totals. Engine versions (`rules`, `parsers`, `categorizer`, `model`) are written into every audit entry and bumped on every rule or parser change.
 - Statements whose rows carry no debit/credit, type or balance information are counted as inflows and raise a high-severity integrity finding ("Transaction direction is determinable"), which sends the case to the committee instead of approving on inflated income.
 - Scanned statements without a text layer are not OCR'd page by page (use the XLSX/CSV export).

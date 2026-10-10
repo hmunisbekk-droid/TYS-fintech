@@ -95,30 +95,30 @@ const pct = (v, d = 1) => (v * 100).toFixed(d) + "%";
   s.addText([{ text: "Live prototype  ", options: { bold: true } }, { text: SITE + "    " }, { text: "Repository  ", options: { bold: true } }, { text: REPO }],
     { x: 0.7, y: 5.5, w: 12, h: 0.5, fontSize: 13, color: HEX.accent6, margin: 0, isTextBox: true, objectName: "links" });
 
-  // 2 — the clause-9 slide
+  // 2 — the evidence slide (Regulation 3618, cl.18–19)
   pres.addSection({ title: "Problem" });
   s = slide("CONTENT", "Problem", "The regulation names the evidence — the self-employed have exactly one line");
-  s.addText("CBU regulation on the debt-burden ratio, cl.9 — income a lender may rely on", { x: 0.6, y: 1.4, w: 7.2, h: 0.4, fontSize: 14, bold: true, color: HEX.accent4, margin: 0, isTextBox: true, objectName: "list caption" });
-  const ev = [["Employer-confirmed salary", "no employer — the borrower is the business", false], ["Pension", "working-age applicant, not a pensioner", false], ["Funded-pension contributions", "none: contributions come through an employer", false], ["Income credited to the borrower's bank accounts", "the only line a self-employed borrower has", true], ["Taxes paid", "self-employed income is untaxed; no return is filed", false], ["Interest, dividends, rental income", "rarely applicable; easy to document when it is", false]];
+  s.addText("CBU Regulation No. 3618 for banks, cl.19 — documented income; cl.18 — receipts on the borrower's accounts", { x: 0.6, y: 1.4, w: 7.2, h: 0.4, fontSize: 14, bold: true, color: HEX.accent4, margin: 0, isTextBox: true, objectName: "list caption" });
+  const ev = [["Employer-confirmed salary", "no employer — the borrower is the business", false], ["Pension", "working-age applicant, not a pensioner", false], ["Funded-pension contributions", "none: contributions come through an employer", false], ["Receipts credited to the borrower's bank accounts (cl.18)", "the only line a self-employed borrower has", true], ["Tax data incl. the annual income declaration", "self-employed income is untaxed; no declaration is filed", false], ["Interest, dividends, rental income", "rarely applicable; easy to document when it is", false]];
   ev.forEach(([t, why, hot], i) => {
     const y = 1.9 + i * 0.68;
     s.addShape(pres.ShapeType.roundRect, { x: 0.6, y, w: 7.2, h: 0.58, fill: { color: hot ? HEX.accent2 : HEX.lt2 }, line: { color: hot ? HEX.accent2 : HEX.lt2 }, rectRadius: 0.08, objectName: `evidence ${i}` });
     s.addImage({ data: hot ? ic.FiCheck : ic.FiAlertCircle, x: 0.75, y: y + 0.14, w: 0.3, h: 0.3, objectName: `evidence icon ${i}` });
     s.addText([{ text: String(t), options: { bold: true } }, { text: `  — ${why}` }], { x: 1.2, y, w: 6.5, h: 0.58, fontSize: hot ? 13.5 : 12, color: HEX.dk1, margin: 0, isTextBox: true, valign: "middle", objectName: `evidence text ${i}` });
   });
-  tile(s, 8.3, 1.5, 4.4, 1.15, "50% cap", "ПДН limit for all loans since 1 Jan 2025 (cl.10); 12-month arithmetic mean of income (cl.7)", { dark: true });
-  tile(s, 8.3, 2.85, 4.4, 1.15, "~140,000", "micro-projects MKBANK targets in 2026 (47,975 in 2025); 1,062 mahalla agents", { dark: true });
+  tile(s, 8.3, 1.5, 4.4, 1.15, "50% limit", "ПДН limit for bank loans (cl.3); income = mean of 6–12 months of receipts (cl.13, cl.18); 50–100% only inside a 15% quota", { dark: true });
+  tile(s, 8.3, 2.85, 4.4, 1.15, "~140,000", "projects MKBANK plans under its lending programmes in 2026 (47,975 micro-projects financed in 2025); 1,062 mahalla agents", { dark: true });
   tile(s, 8.3, 4.2, 4.4, 1.15, "60–90 min", "an officer's manual reading of 12 months of statements per application (our estimate; pilot measures it)", {});
   tile(s, 8.3, 5.55, 4.4, 1.15, "0 lines", "of official income records for ~790k registered self-employed (untaxed, unfiled, no cash register required)", {});
-  s.addText("Sources: lex.uz/docs/4654149 and 6809992 (CBU regulation and 2024 amendments) · spot.uz 27 Mar 2026 (MKBANK, bank's own figures) · yuz.uz (self-employed registrations, 2021) · buxgalter.uz", { x: 0.6, y: 6.75, w: 12, h: 0.3, fontSize: 9, color: HEX.accent4, margin: 0, isTextBox: true, objectName: "sources" });
+  s.addText("Sources: CBU Regulation No. 3618 (Board decision 7/3, 8 Apr 2025; lex.uz/uz/docs/7491592) · spot.uz 27 Mar 2026 (MKBANK, bank's own figures) · yuz.uz (self-employed registrations, 2021) — full list in Appendix D", { x: 0.6, y: 6.75, w: 12, h: 0.3, fontSize: 9, color: HEX.accent4, margin: 0, isTextBox: true, objectName: "sources" });
 
   // 3 — what the officer gets
   pres.addSection({ title: "Product" });
   s = slide("CONTENT", "Product", "What the officer gets in under five seconds");
   s.addImage({ path: path.join(IMG, "income_pdn.png"), x: 0.6, y: 1.45, w: 8.6, h: 3.0, objectName: "screenshot income and pdn" });
   s.addImage({ path: path.join(IMG, "memo.png"), x: 0.6, y: 4.6, w: 8.6, h: 2.3, objectName: "screenshot memo" });
-  const got = [["FiTrendingUp", "12-month regulatory income", "cl.7 mean, cl.9 definition; own-card transfers, loan proceeds, refunds and cash deposits excluded"],
-    ["FiBookOpen", "ПДН with citations", "36-month spreading, guarantor rule, family-programme exemption, lender-type rules (banks: no small-loan exclusion, 15% quota is portfolio-level), 50% cap, maximum affordable amount"],
+  const got = [["FiTrendingUp", "Regulatory income", "cl.13 mean of 6–12 months (median option, cl.14) of account receipts (cl.18); own-card transfers, loan proceeds, refunds and cash deposits excluded"],
+    ["FiBookOpen", "ПДН with citations", "36/60/180-month spreading, guarantor rule, cl.4 exemptions, 50% limit, the 50–100% quota band and the new-self-employed quota (cl.3), maximum affordable amount"],
     ["FiShield", "Integrity report", "balance chain, duplicates, coverage, gaps, pre-application spikes, circular transfers, holder match"],
     ["FiCheckCircle", "Verified memo", "every number traces to its source — statement lines (click to open them), a clause, or the model; the verifier refuses unsourced numbers; hash-chained audit log"]];
   got.forEach(([icn, h, t], i) => {
@@ -135,7 +135,7 @@ const pct = (v, d = 1) => (v * 100).toFixed(d) + "%";
   s.addImage({ data: ic.FiGlobe, x: 0.8, y: 1.85, w: 0.5, h: 0.5, objectName: "globe" });
   s.addText([{ text: "Open on your laptop or phone\n", options: { fontSize: 12, color: HEX.accent6 } }, { text: SITE, options: { fontSize: 18, bold: true, color: HEX.lt1 } }], { x: 1.45, y: 1.5, w: 5.1, h: 1.2, margin: 0, isTextBox: true, valign: "middle", objectName: "url" });
   const steps = ["Load sample A — statement PDF, Soliq certificate, receipt photo parse in the tab (no server, no API)",
-    "Income series, ПДН with clause citations, maximum affordable amount; drag the slider to cross the 50% cap",
+    "Income series, ПДН with clause citations, maximum affordable amount; drag the slider to cross the 50% limit",
     "Integrity checks and risk score with drivers; click any evidence link to see the statement line",
     "Memo: verifier badge shows how many numbers were checked and that none is unsourced",
     "Record the decision; export the case with its hash-chained audit log",
@@ -152,7 +152,7 @@ const pct = (v, d = 1) => (v * 100).toFixed(d) + "%";
   const comps = [["FiFileText", "1 · Intake", "pdf.js with coordinates; XLSX/CSV; tesseract.js OCR uzb+rus+eng, self-hosted; field confidence, tap-to-confirm"],
     ["FiTag", "2 · Categoriser", "multilingual rules + counterparty patterns (recurring payer → family; same mask both ways → own card)"],
     ["FiTrendingUp", "3 · Cash-flow", "12-month series; 18 features identical in TypeScript and Python (parity test)"],
-    ["FiBookOpen", "4 · Rule engine", "ПДН clause by clause: 36/180-month spreading, guarantor rule, lender-type exclusions, family-programme exemption, 50% cap, back-solved amount"],
+    ["FiBookOpen", "4 · Rule engine", "ПДН clause by clause (Regulation 3618): 36/60/180-month spreading, guarantor rule, cl.4 exemptions, 50% limit, 15% quota bands, back-solved amount"],
     ["FiCpu", "5 · Risk model", "XGBoost, monotone constraints, JSON trees evaluated in the browser; attributions vs portfolio median"],
     ["FiShield", "6 · Integrity", "balance chain, duplicates, coverage, gaps, round-sum spikes, circular transfers, holder match"],
     ["FiCheckCircle", "7 · Memo + audit", "template from a fact table; verifier rejects unsourced numbers; SHA-256 hash-chained log"]];
@@ -231,7 +231,7 @@ const pct = (v, d = 1) => (v * 100).toFixed(d) + "%";
   s.addText("Timeline: month 1 shadow mode (engine runs beside the manual process; we measure minutes and agreement) · months 2–3 assisted mode (officer works from the memo) · success metrics: minutes per application, agreement with committee, override rate, ПДН audit findings, retrained model AUC on bank history.", { x: 0.6, y: 5.45, w: 6.2, h: 1.4, fontSize: 10.5, color: HEX.dk1, margin: 0, isTextBox: true, objectName: "timeline" });
   s.addText("Value — the officer-hours formula (every term is a slider)", { x: 7.1, y: 1.4, w: 5.7, h: 0.4, fontSize: 14, bold: true, color: HEX.accent4, margin: 0, isTextBox: true, objectName: "value caption" });
   tile(s, 7.1, 1.85, 2.75, 1.2, "90 → 25 min", "document handling per application, before → with Daromad (assumption 1; the pilot measures it)", { vsize: 22, lsize: 9.5 });
-  tile(s, 10.05, 1.85, 2.75, 1.2, "≈ 42,000 / yr", "addressable applications: 30% of MKBANK's 140,000 micro-projects (bank's own 2026 target) — those outside the ПДН-exempt family programme (assumption 2)", { vsize: 22, lsize: 8.5 });
+  tile(s, 10.05, 1.85, 2.75, 1.2, "≈ 42,000 / yr", "addressable applications: 30% of MKBANK's 140,000 micro-projects (bank's own 2026 target) — those outside the cl.4-exempt family programme (assumption 2)", { vsize: 22, lsize: 8.5 });
   tile(s, 7.1, 3.2, 2.75, 1.2, "≈ 45,000 h", "officer-hours saved per year = 42,000 × 65 min ≈ 23 FTE-years at 2,000 h", { vsize: 22, lsize: 9.5, dark: true });
   tile(s, 10.05, 3.2, 2.75, 1.2, "≈ 4.1 bn UZS/yr", "23 FTE × 15M/month × 12 — officer time only; at a 10% addressable share ≈ 1.4 bn", { vsize: 20, lsize: 9.5, dark: true });
   s.addText([{ text: "Payback: ", options: { bold: true } }, { text: "the ≈ 190M pilot itself (5 of 181 branches, 3 months) does not pay back — it measures the two assumptions. After roll-out the saving of ≈ 4.1 bn/yr repays the pilot within its first month; at a 10% addressable share, within two months. Not counted: faster time-to-decision for the borrower, fewer ПДН compliance findings, better risk selection — claimed only after the pilot measures them." }],
@@ -245,7 +245,7 @@ const pct = (v, d = 1) => (v * 100).toFixed(d) + "%";
   s.addText("The replication test — what the same LLM tools do not give you", { x: 1.3, y: 1.6, w: 5.1, h: 0.5, fontSize: 14, bold: true, color: HEX.dk2, margin: 0, isTextBox: true, valign: "middle", objectName: "replication head" });
   bullets(s, ["Statement parsers that learn columns from the data rows (two Uzbek layouts today, any text-layer PDF, XLSX, CSV) and reconcile the balance chain",
     "A categoriser lexicon in Uzbek Latin, Cyrillic and Russian with counterparty-pattern rules — and the pilot plan to grow it on bank data",
-    "A rule engine mapped clause by clause to the live ПДН regulation, with its exemptions and the back-solved maximum amount",
+    "A rule engine mapped clause by clause to the live bank regulation (No. 3618), with its exemptions, quota bands and the back-solved maximum amount",
     "A memo verifier that makes unsourced numbers impossible — zero hallucination by construction, no LLM needed",
     "A declared, calibrated synthetic population with rendered documents, a camera model and labelled tampering — a test bed the bank can keep using",
     "Evaluation through the real app, reproducible with one command each"], 0.8, 2.25, 5.6, 4.4, 11.5);
@@ -269,18 +269,19 @@ const pct = (v, d = 1) => (v * 100).toFixed(d) + "%";
   pres.addSection({ title: "Appendix" });
   s = slide("CONTENT", "Appendix", "Appendix A · ПДН rule engine, clause by clause", null);
   const cl = [["Clause", "Rule as implemented", "Where it shows"],
-    ["cl.1", "ПДН = average monthly payments on loans/microloans ÷ average monthly income (borrower + co-borrower)", "formula panel"],
-    ["cl.2", "Includes the application under review and all loan agreements with all lenders; co-borrower loans counted. Lender-type reliefs (2024): banks («банк томонидан…») — only a portfolio quota, up to 15% of the number of loans to individuals outside the requirement; MFOs and pawnshops («микромолия ташкилоти ва ломбард томонидан…») — excluded when amount + outstanding principal ≤ 50 BRV; MFOs lending to the self-employed — 75 BRV. Daromad defaults to bank: ratio always computed, quota shown as a note", "lender-type selector, ПДН panel note"],
-    ["cl.4", "Guarantor loans count only when payments are more than 30 days overdue («30 кундан ортиқ муддати ўтган тўловлари мавжуд бўлса»)", "obligations table, DPD column"],
-    ["cl.4¹", "Terms over 36 months: total payments spread over 36 («барча тўловлар 36 ойга тенг миқдорда тақсимланади»); mortgages over 180 months spread over 180", "per-line note"],
-    ["cl.6", "Calculation date within 10 calendar days of the loan date", "case date"],
-    ["cl.7", "Average monthly income = arithmetic mean of the last 12 months; co-borrower income added", "income base"],
-    ["cl.9", "Evidence: employer salary data, pension, funded-pension contributions, income credited to bank accounts, taxes paid, interest/dividends/rent; other data allowed", "memo section 2"],
-    ["cl.10", "Ratio ≤ 50% from 1 January 2025 (60% between 1 July 2024 and 1 January 2025)", "cap, pass/fail"],
-    ["cl.11", "Family-entrepreneurship programme loans exempt from the ratio requirement", "exemption badge"]];
+    ["cl.2", "ПДН = average monthly payments on loans (microloans) ÷ average monthly income («ўртача ойлик тўловлари миқдорининг … ўртача ойлик даромадига нисбати»)", "formula panel"],
+    ["cl.3", "Ratio ≤ 50% («50 фоиздан ошмаслиги лозим»). Up to 15% of outstanding loans may carry up to 100% (amendment 31/9, 2025) — bank-level quota → committee. Self-employed registered < 6 months: income-generating loans within 15% without the ratio", "status: pass / quota / fail; cl.3 ¶4 badge"],
+    ["cl.4", "Not applicable to loans to individual entrepreneurs, family-entrepreneurship programmes and education loans («татбиқ этилмайди»)", "exemption badge"],
+    ["cl.7", "All agreements with all lenders incl. the application under review; co-borrower loans counted; guarantor loans only when > 30 days overdue («30 кундан ортиқ муддати ўтган»)", "obligations table, DPD column"],
+    ["cl.8", "Annuity spreading: microloan > 36 months → 36; other loan > 60 → 60; mortgage > 180 → 180", "per-line note"],
+    ["cl.12", "No more than 3 working days between the calculation and the issue («3 иш кунидан ошмаслиги керак»)", "case date"],
+    ["cl.13", "Average income over a continuous 6–12-month period («камида 6 ой … 12 ойдан ошмаган»): 1/12 of the last 12 months, or 1/n for 6–11", "income base, months used"],
+    ["cl.14", "The median may replace the mean when it is lower", "median switch"],
+    ["cl.18", "Receipts credited to the borrower's and co-borrower's bank accounts count as income («банк ҳисобварақларига тушган тушумларини инобатга олади»)", "statement-based income"],
+    ["cl.19", "Documented evidence: salary, pension, funded-pension contributions, tax data incl. the annual declaration, interest/dividends/rent — net of taxes", "memo section 2"]];
   s.addTable(cl.map((r, i) => r.map((c, j) => ({ text: c, options: { bold: i === 0 || j === 0, fontSize: 9, color: i === 0 ? HEX.lt1 : HEX.dk1, fill: { color: i === 0 ? HEX.accent1 : i % 2 ? HEX.lt1 : HEX.lt2 } } }))),
     { x: 0.6, y: 1.45, w: 12.1, colW: [0.9, 8.4, 2.8], rowH: 0.42, border: { type: "solid", color: HEX.lt2, pt: 0.5 }, objectName: "clause table" });
-  s.addText("BRV = 440,000 UZS from 1 September 2026 (previously 412,000); 50 BRV = 22,000,000 UZS. Clause mapping checked against lex.uz/docs/4654149 and 6809992 on 10 Oct 2026; quotes verbatim in docs/REGULATION_QUOTES.md.", { x: 0.6, y: 6.55, w: 12, h: 0.4, fontSize: 9, color: HEX.accent4, margin: 0, isTextBox: true, objectName: "brv note" });
+  s.addText("CBU Board decision 7/3 of 8 Apr 2025, reg. No. 3618 (22 Apr 2025), in force 24 Jul 2025, amended 5 Dec 2025 (in force 21 Jan 2026) — lex.uz/uz/docs/7491592. Regulation 3205 (lex.uz 4654149) covers MFOs and pawnshops only since 24 Jul 2025 and is not used. Checked 11 Oct 2026; quotes in docs/REGULATION_QUOTES.md.", { x: 0.6, y: 6.55, w: 12, h: 0.4, fontSize: 9, color: HEX.accent4, margin: 0, isTextBox: true, objectName: "brv note" });
 
   s = slide("CONTENT", "Appendix", "Appendix B · Failure cases, perimeter, human in the loop", null);
   card(s, 0.6, 1.45, 6.0, 5.3, "fail card");
@@ -307,11 +308,20 @@ const pct = (v, d = 1) => (v * 100).toFixed(d) + "%";
     ["Tesseract tessdata_fast (uzb, uzb_cyrl, rus, eng); tesseract.js", "receipt OCR", "Apache 2.0"],
     ["pdf.js; SheetJS; Next.js; React", "parsing, application", "Apache 2.0 / MIT"],
     ["XGBoost; scikit-learn; NumPy; pandas; OpenCV; Playwright; Jinja2; qrcode", "training, rendering, evaluation", "Apache 2.0 / BSD-3 / MIT"],
-    ["CBU regulation texts (lex.uz 4654149, 6809992)", "rule engine, citations", "public legal information"],
+    ["CBU Regulation No. 3618 for banks (lex.uz/uz/docs/7491592)", "rule engine, citations", "public legal information"],
     ["stat.uz wages; CBU statistics; MKBANK public pages (sponsored article, bank's own figures)", "calibration anchors, business case", "public information, cited"]];
   s.addTable(ds.map((r, i) => r.map((c) => ({ text: c, options: { bold: i === 0, fontSize: 10.5, color: i === 0 ? HEX.lt1 : HEX.dk1, fill: { color: i === 0 ? HEX.accent1 : i % 2 ? HEX.lt1 : HEX.lt2 } } }))),
     { x: 0.6, y: 1.45, w: 12.1, colW: [5.0, 3.0, 4.1], rowH: 0.55, border: { type: "solid", color: HEX.lt2, pt: 0.5 }, objectName: "data table" });
   s.addText("Rules compliance: no hard-coded answers (every figure computed from uploaded documents at run time); no real personal or confidential data; all code written during the final by team TYS with LLM coding assistance (declared); deployment from the submitted repository; CI on every push.", { x: 0.6, y: 6.0, w: 12.1, h: 0.8, fontSize: 10.5, color: HEX.dk1, margin: 0, isTextBox: true, objectName: "compliance" });
+
+  // Appendix D — references (Westminster Harvard), two slides
+  const REFS = JSON.parse(fs.readFileSync(path.join(__dirname, "../docs/references.json"), "utf8"));
+  const half = Math.ceil(REFS.length / 2);
+  [REFS.slice(0, half), REFS.slice(half)].forEach((chunk, k) => {
+    s = slide("CONTENT", "Appendix", `Appendix D · References, Westminster Harvard (${k + 1}/2)`, null);
+    const paras = chunk.map((r) => [{ text: r.a + " " + (r.pre ? r.pre + " " : ""), options: { breakLine: false } }, { text: r.it, options: { italic: true, breakLine: false } }, { text: " " + r.post, options: { breakLine: true } }]).flat();
+    s.addText(paras, { x: 0.6, y: 1.4, w: 12.1, h: 5.5, fontSize: 11, color: HEX.dk1, margin: 0, isTextBox: true, valign: "top", paraSpaceAfter: 5, objectName: `references ${k + 1}` });
+  });
 
   const out = path.join(__dirname, WITH_NOTES ? "Daromad_TYS_deck.private.pptx" : "Daromad_TYS_deck.pptx");
   await pres.writeFile({ fileName: out });
