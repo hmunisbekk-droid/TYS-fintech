@@ -6,7 +6,7 @@ Daromad turns the documents a self-employed or family-business borrower actually
 statements (PDF / XLSX / CSV), fiscal receipts (photos), the Soliq self-employed certificate — into:
 
 1. a regulator-compliant **12-month income figure** (CBU debt-burden regulation, cl.7 and cl.9),
-2. the **debt-burden ratio (ПДН)** with every clause cited and the maximum affordable amount back-solved,
+2. the **debt-burden ratio (ПДН)** with every clause cited, lender-type rules (bank by default), and the maximum affordable amount back-solved,
 3. an **integrity report** (balance-chain reconciliation, duplicates, coverage, pre-application inflow spikes, circular transfers, cross-document consistency),
 4. an explained **risk score** (gradient-boosted trees with monotone constraints, run in the browser),
 5. a **credit memo** in which every number is traceable to a document line and checked by a faithfulness verifier,
@@ -116,6 +116,8 @@ CBU regulation texts are public legal information (lex.uz).
 
 - `xlsx` (SheetJS) is pinned at 0.18.5, the last version on the npm registry, which carries two advisories (prototype pollution, ReDoS) in the CSV/XLSX reader. The fix is the vendor build: `cd apps/web && npm install https://cdn.sheetjs.com/xlsx-0.20.3/xlsx-0.20.3.tgz` — same API. Our build environment could not reach cdn.sheetjs.com, so this is done on a developer machine before the pilot; in production uploads are parsed inside the bank's perimeter only.
 - BRV is a configuration constant (`apps/web/lib/rules/pdn.ts`, `synth/archetypes.py`): 440,000 UZS from 1 Sep 2026.
+- Lender type (section 1 of the case page) defaults to **bank**: no small-loan exclusion, the ratio is computed for every application and the bank-level 15% quota is shown as a note. The 50-BRV (MFO/pawnshop) and 75-BRV (MFO + self-employed) exclusions apply only when the lender type is changed.
+- Statements whose rows carry no debit/credit, type or balance information are counted as inflows and raise a high-severity integrity finding ("Transaction direction is determinable"), which sends the case to the committee instead of approving on inflated income.
 - Scanned statements without a text layer are not OCR'd page by page (use the XLSX/CSV export).
 
 ## Rules compliance
