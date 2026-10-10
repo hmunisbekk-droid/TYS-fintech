@@ -36,13 +36,20 @@ const layouts: { name: string; build: () => Promise<{ n: number; credit: number;
       const nb = (v: number) => v.toFixed(2).replace(".", ",").replace(/\B(?=(\d{3})+(?!\d))/g, " ");
       const text = ["Дата\tНазначение\tРасход\tПриход\tОстаток", ...rows.map((r) => `${dmy(r.date)}\t${r.description}\t${r.debit ? nb(r.debit) : ""}\t${r.credit ? nb(r.credit) : ""}\t${nb(r.balance)}`)].join("\n");
       return summarise(await parseCsv("ood6", "ru.tsv", text)); } },
+  { name: "Wallet export (Payme/Humo style): № платежа, masked card, processing, 'Тип операции' +/−, 'Назначение или Сервис', Сумма, Комиссия, cashback, currency, 'Дата и время' as text, status; newest first", build: async () => {
+      const aoa = [["№ платежа", "Номер карты", "Процессинг", "Тип операции", "Назначение или Сервис", "Сумма", "Комиссия", "Сумма кэшбека", "Валюта", "Дата и время", "Статус платежа"],
+        ...[...rows].reverse().map((r, i) => [4800000000 + i, "986017******4502", "humo", r.credit ? "+" : "-", r.description, r.credit || r.debit, 0, 0, "UZS", `${r.date}, 12:${String(i % 60).padStart(2, "0")}:00`, "Успешно проведён"]),
+        [4899999999, "986017******4502", "humo", "-", "SHOULD BE IGNORED", 999999, 0, 0, "UZS", `${rows[0].date}, 10:00:00`, "Отменён"]];
+      const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(aoa), "Transactions");
+      const buf = XLSX.write(wb, { type: "array", bookType: "xlsx" }) as ArrayBuffer;
+      return summarise(await parseXlsx("ood7", "wallet.xlsx", buf)); } },
 ];
 function summarise(d: { transactions: { credit: number; debit: number }[]; warnings: string[] }) {
   return { n: d.transactions.length, credit: d.transactions.reduce((a, t) => a + t.credit, 0), debit: d.transactions.reduce((a, t) => a + t.debit, 0), warnings: d.warnings };
 }
 
 describe("out-of-distribution statement layouts", () => {
-  it("parses six unseen layouts with exact row counts and totals", async () => {
+  it("parses seven unseen layouts with exact row counts and totals", async () => {
     const results = [];
     for (const l of layouts) {
       const r = await l.build();
@@ -51,7 +58,7 @@ describe("out-of-distribution statement layouts", () => {
     }
     fs.writeFileSync(path.join(here, "../public/model/ood_eval.json"), JSON.stringify({ truth: { rows: truth.n, credit: Math.round(truth.credit), debit: Math.round(truth.debit) }, layouts: results,
       exact_count: results.filter((r) => r.exact).length, n: results.length,
-      note: "Six statement layouts the parser was never tuned on, built from a fixture borrower's ground-truth rows; written by tests/ood.test.ts." }, null, 1));
+      note: "Seven statement layouts the parser was never tuned on, built from a fixture borrower's ground-truth rows; written by tests/ood.test.ts." }, null, 1));
     for (const r of results) expect(r.exact, `${r.layout}: ${r.rows}/${r.rows_truth} rows, credit ${r.credit} vs ${Math.round(truth.credit)}, debit ${r.debit} vs ${Math.round(truth.debit)} ${r.warnings.join(" | ")}`).toBe(true);
   });
 });

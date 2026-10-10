@@ -45,6 +45,7 @@ export function parseAmount(s: string): number | null {
 }
 
 export const TYPE_HEADER = /^(type|тип|turi|tur|operation type|тип операции|dr\/cr|d\/c|direction|вид|вид операции|kirim\/chiqim|приход\/расход)$/i;
+export const FAILED_STATUS = /(отмен|ошиб|не провед|fail|cancel|reject|declin|bekor|xato|muvaffaqiyatsiz|error)/i;
 export function signFromType(v: unknown): "credit" | "debit" | null {
   if (typeof v !== "string") return null;
   const t = v.trim().toLowerCase();
@@ -54,7 +55,8 @@ export function signFromType(v: unknown): "credit" | "debit" | null {
 }
 
 export const HEADER_WORDS = {
-  date: /^(дата|sana|date|день)$/i,
+  date: /(^|[\s/(])(дата|sana|date|день|datetime)([\s/,)]|$)/i,   // "Дата", "Дата и время", "Sana va vaqt", "Date/Time"
+  status: /(статус|status|holat)/i,
   time: /^(время|vaqt|time)$/i,
   desc: /(описан|operatsiya|tavsif|description|назнач|details|наименован|контрагент|merchant)/i,
   debit: /(расход|chiqim|debit|дебет|списан|outflow|withdraw|xarajat)/i,

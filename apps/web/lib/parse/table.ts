@@ -1,7 +1,7 @@
 // XLSX / CSV statement parsing (SheetJS). Finds the header row, maps columns by multilingual header names,
 // falls back to balance-chain sign inference when only an amount column exists.
 import type { ParsedDocument, Transaction } from "../types";
-import { HEADER_WORDS, TYPE_HEADER, excelDateToIso, inferSignsFromBalance, makeTx, parseAmount, parseDate, periodOf, signFromType } from "./common";
+import { FAILED_STATUS, HEADER_WORDS, TYPE_HEADER, excelDateToIso, inferSignsFromBalance, makeTx, parseAmount, parseDate, periodOf, signFromType } from "./common";
 
 type Cell = string | number | null | undefined;
 
@@ -30,6 +30,7 @@ export function parseTableRows(docId: string, rows: Cell[][]): { txs: Transactio
       const s = c.trim();
       if (HEADER_WORDS.date.test(s)) m.date = j;
       else if (HEADER_WORDS.time.test(s)) m.time = j;
+      else if (HEADER_WORDS.status.test(s)) m.status = j;
       else if (HEADER_WORDS.debit.test(s)) m.debit = j;
       else if (HEADER_WORDS.credit.test(s)) m.credit = j;
       else if (HEADER_WORDS.balance.test(s)) m.balance = j;
@@ -43,18 +44,21 @@ export function parseTableRows(docId: string, rows: Cell[][]): { txs: Transactio
     const r = rows[i] ?? [];
     const line = r.filter((c) => c !== null && c !== undefined).map(String).join(" ");
     if (!holder) { const m = line.match(/(Владелец|Egasi|Holder|Card holder|Клиент)\s*:?\s*(.+)/i); if (m) holder = m[2].trim(); }
-    if (!cardMask) { const m = line.match(/(\d{4})\s?\*{4}\s?\*{4}\s?(\d{4})/); if (m) cardMask = `${m[1]} **** **** ${m[2]}`; }
+    if (!cardMask) { const m = line.match(/(\d{4})\s?\*{4}\s?\*{4}\s?(\d{4})/) ?? line.match(/(\d{4})\d{0,2}\*{4,8}(\d{4})/); if (m) cardMask = `${m[1]} **** **** ${m[2]}`; }
   }
   const out: { tx: Transaction; amount: number; signed: boolean }[] = [];
-  let n = 0, dropped = 0;
+  let n = 0, dropped = 0, skippedFailed = 0;
   for (let i = hdr + 1; i < rows.length; i++) {
     const r = rows[i] ?? [];
     let date: string | null = null, dcol = map.date;
     if (dcol !== undefined) date = cellDate(r[dcol]);
     if (!date) { for (let j = 0; j < r.length; j++) { const d = cellDate(r[j]); if (d) { date = d; dcol = j; break; } } }
     if (!date) continue;
+    if (map.status !== undefined && typeof r[map.status] === "string" && FAILED_STATUS.test(r[map.status] as string)) { skippedFailed++; continue; }
     n++;
-    const time = map.time !== undefined && typeof r[map.time] === "string" ? String(r[map.time]) : undefined;
+    let time = map.time !== undefined && typeof r[map.time] === "string" ? String(r[map.time]) : undefined;
+    if (!time && dcol !== undefined && typeof r[dcol] === "string") { const tm = (r[dcol] as string).match(/(\d{1,2}:\d{2})(:\d{2})?/); if (tm) time = tm[1]; }
+    if (!cardMask) { for (const c of r) { if (typeof c === "string") { const m = c.match(/(\d{4})\d{0,2}\*{4,8}(\d{4})/); if (m) { cardMask = `${m[1]} **** **** ${m[2]}`; break; } } } }
     let debit = 0, credit = 0, balance: number | null = null, amount = 0, signed = false;
     if (map.debit !== undefined) { const v = cellAmount(r[map.debit]); if (v) { debit = Math.abs(v); amount = -Math.abs(v); signed = true; } }
     if (map.credit !== undefined) { const v = cellAmount(r[map.credit]); if (v) { credit = Math.abs(v); amount = Math.abs(v); signed = true; } }
@@ -71,7 +75,7 @@ export function parseTableRows(docId: string, rows: Cell[][]): { txs: Transactio
     }
     if (hdr < 0) {
       // headerless: numbers right of the date: amount, balance
-      const nums = r.map((c, j) => ({ v: cellAmount(c), j })).filter((x) => x.v !== null && x.j !== dcol) as { v: number; j: number }[];
+      const nums = r.map((c, j) => ({ v: cellAmount(c), j })).filter((x) => x.v !== null && x.j !== dcol && Math.abs(x.v as number) < 5e9) as { v: number; j: number }[];
       if (nums.length >= 2) { amount = nums[nums.length - 2].v; balance = nums[nums.length - 1].v; }
       else if (nums.length === 1) amount = nums[0].v;
       if (amount < 0) { debit = -amount; signed = true; }
@@ -82,6 +86,7 @@ export function parseTableRows(docId: string, rows: Cell[][]): { txs: Transactio
     out.push({ tx: makeTx(docId, 1, n, date, desc, debit, credit, balance, time), amount, signed });
   }
   if (dropped > 0) warnings.push(`${dropped} dated row(s) had no recognisable amount and were skipped — check the amount format.`);
+  if (skippedFailed > 0) warnings.push(`${skippedFailed} row(s) with a failed/cancelled status were ignored.`);
   const unsigned = out.filter((o) => !o.signed);
   if (unsigned.length) {
     const signs = inferSignsFromBalance(out.map((o) => ({ amount: o.amount, balance: o.tx.balance })));

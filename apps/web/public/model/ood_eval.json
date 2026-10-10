@@ -64,9 +64,20 @@
    "debit": 25922000,
    "exact": true,
    "warnings": []
+  },
+  {
+   "layout": "Wallet export (Payme/Humo style): № платежа, masked card, processing, 'Тип операции' +/−, 'Назначение или Сервис', Сумма, Комиссия, cashback, currency, 'Дата и время' as text, status; newest first",
+   "rows": 400,
+   "rows_truth": 400,
+   "credit": 30046000,
+   "debit": 25922000,
+   "exact": true,
+   "warnings": [
+    "1 row(s) with a failed/cancelled status were ignored."
+   ]
   }
  ],
- "exact_count": 6,
- "n": 6,
- "note": "Six statement layouts the parser was never tuned on, built from a fixture borrower's ground-truth rows; written by tests/ood.test.ts."
+ "exact_count": 7,
+ "n": 7,
+ "note": "Seven statement layouts the parser was never tuned on, built from a fixture borrower's ground-truth rows; written by tests/ood.test.ts."
 }
