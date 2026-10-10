@@ -6,7 +6,7 @@ import { runCase, type CaseResult, type Recommendation } from "@/lib/case";
 import { FEATURE_LABELS } from "@/lib/features";
 import { fetchAsFile, loadDocument } from "@/lib/loader";
 import { fmtPct, fmtUZS, memoToText } from "@/lib/memo";
-import { CITATIONS } from "@/lib/rules/pdn";
+import { CITATIONS, type LenderType } from "@/lib/rules/pdn";
 import type { FeatureStats, RiskModel } from "@/lib/risk";
 import type { ExistingLoan, LoanRequest, ParsedDocument, Transaction } from "@/lib/types";
 
@@ -38,6 +38,7 @@ export default function CasePage() {
   const [request, setRequest] = useState<LoanRequest>({ amount: 25_000_000, term_months: 24, annual_rate: 0.28, product: "express" });
   const [loans, setLoans] = useState<ExistingLoan[]>([]);
   const [coIncome, setCoIncome] = useState(0);
+  const [lenderType, setLenderType] = useState<LenderType>("bank");
   const [docs, setDocs] = useState<ParsedDocument[]>([]);
   const [busy, setBusy] = useState<string | null>(null);
   const [progress, setProgress] = useState("");
@@ -60,9 +61,9 @@ export default function CasePage() {
   const result: CaseResult | null = useMemo(() => {
     if (!model || !stats || !docs.some((d) => d.kind === "statement" && d.transactions.length)) return null;
     try {
-      return runCase({ applicationDate: appDate, applicantName: applicant || undefined, documents: docs, existingLoans: loans, request, coBorrowerIncome: coIncome || undefined }, model, stats);
+      return runCase({ applicationDate: appDate, applicantName: applicant || undefined, documents: docs, existingLoans: loans, request, coBorrowerIncome: coIncome || undefined, lenderType }, model, stats);
     } catch (e) { console.error(e); return null; }
-  }, [model, stats, docs, appDate, applicant, loans, request, coIncome]);
+  }, [model, stats, docs, appDate, applicant, loans, request, coIncome, lenderType]);
 
   const lastRunHash = useRef("");
   const logTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -117,7 +118,7 @@ export default function CasePage() {
   };
   const clearCase = async () => {
     setDocs([]); setLoans([]); setDecision(null); setApplicant(""); setCoIncome(0); setReason(""); setEvidence(null);
-    setAppDate(today()); setRequest({ amount: 25_000_000, term_months: 24, annual_rate: 0.28, product: "express" });
+    setAppDate(today()); setRequest({ amount: 25_000_000, term_months: 24, annual_rate: 0.28, product: "express" }); setLenderType("bank");
     log.current = new AuditLog(); lastRunHash.current = "";
     await log.current.append("case_created", { ts: Date.now() }, "New case opened in browser");
     setAudit([...log.current.entries]);
@@ -200,6 +201,10 @@ export default function CasePage() {
             <label className="field">Term (months)<select value={request.term_months} onChange={(e) => setRequest({ ...request, term_months: Number(e.target.value) })}>{[6, 12, 18, 24, 36, 48, 60].map((t) => <option key={t} value={t}>{t}</option>)}</select></label>
             <label className="field">Rate p.a.<input type="number" step={0.01} value={request.annual_rate} onChange={(e) => setRequest({ ...request, annual_rate: Number(e.target.value) })} /></label>
             <label className="field">Co-borrower income / month<input type="number" step={100_000} value={coIncome} onChange={(e) => setCoIncome(Number(e.target.value))} /></label>
+            <label className="field">Lender type<select value={lenderType} onChange={(e) => setLenderType(e.target.value as LenderType)}>
+              <option value="bank">Bank (MKBANK) — no small-loan exclusion</option>
+              <option value="mfo">Microfinance organisation — 50 BRV / 75 BRV self-employed</option>
+              <option value="pawnshop">Pawnshop — 50 BRV</option></select></label>
           </div>
           <h3 style={{ marginTop: ".8rem" }}>Existing obligations <span className="muted small">(credit bureau in production; editable here)</span></h3>
           <div className="tscroll"><table><thead><tr><th>Lender</th><th className="num">Monthly payment</th><th className="num">Term</th><th className="num">Outstanding</th><th className="num">DPD</th><th>Role</th><th></th></tr></thead>
@@ -277,7 +282,8 @@ export default function CasePage() {
                 <label className="field" style={{ marginTop: ".5rem" }}>What if the requested amount were… <b>{fmtUZS(request.amount)}</b>
                   <input type="range" min={1_000_000} max={100_000_000} step={500_000} value={request.amount} onChange={(e) => setRequest({ ...request, amount: Number(e.target.value) })} />
                 </label>
-                {result.pdn.warnings.map((w, i) => <div key={i} className="small" style={{ color: "var(--warn)" }}>⚠ {w}</div>)}
+                {result.pdn.lenderType === "bank" && <p className="small muted"><span className="tag info">bank</span> No small-loan exclusion for banks; the 15% portfolio quota <span className="cite" title={CITATIONS.portfolioAllowance.text}>cl.2 (2024)</span> is a bank-level decision, so the ratio is computed for every application.</p>}
+                {result.pdn.warnings.filter((w) => !w.startsWith("Bank lender")).map((w, i) => <div key={i} className="small" style={{ color: "var(--warn)" }}>⚠ {w}</div>)}
               </div>
             </div>
           </div>

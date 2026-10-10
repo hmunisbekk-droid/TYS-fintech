@@ -85,13 +85,22 @@ describe("ПДН rule engine (lex.uz/docs/4654149 as amended)", () => {
     expect(b.existingPayments[0].value).toBe(1_000_000);
     expect(b.ratio).toBeGreaterThan(a.ratio);
   });
-  it("exempts small loans (≤ 50 BRV) and family-programme loans", () => {
-    const small = computePdn({ monthlyIncome: Array(12).fill(1_000_000), existingLoans: [], request: { ...req, amount: 40 * BRV_UZS, term_months: 12 } });
-    expect(small.exempt).toBe(true); expect(small.exemptCitation).toBe("smallLoan"); expect(small.passes).toBe(true);
-    const fam = computePdn({ monthlyIncome: Array(12).fill(1_000_000), existingLoans: [], request: { ...req, product: "family_program" } });
+  it("applies the small-loan exclusions only to MFOs/pawnshops (50 BRV; 75 BRV MFO + self-employed) — never to banks", () => {
+    const inc = Array(12).fill(1_000_000);
+    const bankSmall = computePdn({ lenderType: "bank", monthlyIncome: inc, existingLoans: [], request: { ...req, amount: 40 * BRV_UZS, term_months: 12 } });
+    expect(bankSmall.exempt).toBe(false); expect(bankSmall.passes).toBe(bankSmall.ratio <= 0.5); expect(bankSmall.citations).toContain("portfolioAllowance");
+    const defaultIsBank = computePdn({ monthlyIncome: inc, existingLoans: [], request: { ...req, amount: 40 * BRV_UZS, term_months: 12 } });
+    expect(defaultIsBank.exempt).toBe(false);
+    const mfoSmall = computePdn({ lenderType: "mfo", monthlyIncome: inc, existingLoans: [], request: { ...req, amount: 40 * BRV_UZS, term_months: 12 } });
+    expect(mfoSmall.exempt).toBe(true); expect(mfoSmall.exemptCitation).toBe("smallLoan"); expect(mfoSmall.passes).toBe(true);
+    const mfo60 = computePdn({ lenderType: "mfo", monthlyIncome: inc, existingLoans: [], request: { ...req, amount: 60 * BRV_UZS, term_months: 12 } });
+    expect(mfo60.exempt).toBe(false);
+    const mfo60se = computePdn({ lenderType: "mfo", selfEmployed: true, monthlyIncome: inc, existingLoans: [], request: { ...req, amount: 60 * BRV_UZS, term_months: 12 } });
+    expect(mfo60se.exempt).toBe(true);
+    const pawn = computePdn({ lenderType: "pawnshop", selfEmployed: true, monthlyIncome: inc, existingLoans: [], request: { ...req, amount: 60 * BRV_UZS, term_months: 12 } });
+    expect(pawn.exempt).toBe(false);
+    const fam = computePdn({ monthlyIncome: inc, existingLoans: [], request: { ...req, product: "family_program" } });
     expect(fam.exempt).toBe(true); expect(fam.exemptCitation).toBe("familyExempt");
-    const notExempt = computePdn({ monthlyIncome: Array(12).fill(1_000_000), existingLoans: [], request: { ...req, amount: 60 * BRV_UZS } });
-    expect(notExempt.exempt).toBe(false);
   });
   it("adds co-borrower income to the base (cl.7)", () => {
     const a = computePdn({ monthlyIncome: income, existingLoans: [], request: req });
@@ -107,7 +116,7 @@ describe("ПДН rule engine (lex.uz/docs/4654149 as amended)", () => {
   });
   it("warns with fewer than 12 months and handles zero income", () => {
     const r = computePdn({ monthlyIncome: [1, 2, 3], existingLoans: [], request: req });
-    expect(r.warnings.length).toBe(1);
+    expect(r.warnings.filter((w) => !w.startsWith("Bank lender")).length).toBe(1);
     const z = computePdn({ monthlyIncome: [], existingLoans: [], request: req });
     expect(z.ratio).toBe(Number.POSITIVE_INFINITY); expect(z.passes).toBe(false); expect(z.maxAffordableAmount).toBe(0);
   });
@@ -177,5 +186,27 @@ describe("memo verifier sweep — every scenario must verify", () => {
     }
     expect(failures, failures.slice(0, 5).join("\n")).toEqual([]);
     expect(n).toBe(300);
+  });
+});
+
+
+describe("direction safety net", () => {
+  it("flags a statement with only positive amounts and no type/balance column as high severity and refers the case", () => {
+    const fx = fixture[0];
+    const rows = [["Date", "Description", "Amount"], ...fx.transactions.slice(0, 200).map((t) => [t.date, t.description, String(t.credit || t.debit)])];
+    const r = parseTableRows("pos", rows);
+    expect(r.assumedSignRows).toBe(200);
+    const doc: ParsedDocument = { id: "pos", fileName: "positive-only.csv", kind: "statement", mime: "text/csv", pages: 1, transactions: r.txs, fields: [], warnings: r.warnings, assumedSignRows: r.assumedSignRows, parseMs: 1 };
+    const res = runCase({ applicationDate: fx.application_date, documents: [doc], existingLoans: [], request: { amount: 5_000_000, term_months: 12, annual_rate: 0.28, product: "express" } }, model, stats);
+    const dir = res.checks.find((c) => c.id.startsWith("direction:"));
+    expect(dir?.passed).toBe(false); expect(dir?.severity).toBe("high");
+    expect(res.recommendation).toBe("refer");
+    expect(res.memo.verification.ok).toBe(true);
+  });
+  it("does not flag a signed-amount column (negatives present)", () => {
+    const fx = fixture[0];
+    const rows = [["Date", "Description", "Amount"], ...fx.transactions.slice(0, 200).map((t) => [t.date, t.description, String(t.credit ? t.credit : -t.debit)])];
+    const r = parseTableRows("sgn", rows);
+    expect(r.assumedSignRows).toBe(0);
   });
 });

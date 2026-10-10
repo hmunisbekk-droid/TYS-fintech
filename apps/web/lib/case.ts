@@ -3,7 +3,7 @@ import { categorizeAll } from "./categorize";
 import { computeFeatures, last12Months, monthlySeries, type Features } from "./features";
 import { runIntegrityChecks, type Check } from "./integrity";
 import { buildMemo, fmtPct, fmtUZS, type Memo } from "./memo";
-import { computePdn, type PdnResult } from "./rules/pdn";
+import { computePdn, type LenderType, type PdnResult } from "./rules/pdn";
 import { attributions, predictProbability, riskBand, type Attribution, type FeatureStats, type RiskModel } from "./risk";
 import type { ExistingLoan, LoanRequest, MonthlySeries, ParsedDocument, Transaction } from "./types";
 
@@ -14,6 +14,7 @@ export interface CaseInput {
   existingLoans: ExistingLoan[];
   request: LoanRequest;
   coBorrowerIncome?: number;
+  lenderType?: LenderType;     // default bank (MKBANK)
 }
 
 export type Recommendation = "approve" | "approve_reduced" | "refer" | "decline";
@@ -73,7 +74,8 @@ export function runCase(inp: CaseInput, model: RiskModel, stats: FeatureStats): 
   const features = computeFeatures(inWindow, inp.request.amount, inp.request.term_months, inp.existingLoans, months);
   timings.features = performance.now() - t; t = performance.now();
 
-  const pdn = computePdn({ monthlyIncome: series.regulatoryIncome, coBorrowerMonthlyIncome: inp.coBorrowerIncome,
+  const selfEmployed = inp.documents.some((d) => d.kind === "certificate" && d.fields.some((f) => f.name === "status"));
+  const pdn = computePdn({ lenderType: inp.lenderType ?? "bank", selfEmployed, monthlyIncome: series.regulatoryIncome, coBorrowerMonthlyIncome: inp.coBorrowerIncome,
     existingLoans: inp.existingLoans, request: inp.request });
   timings.rules = performance.now() - t; t = performance.now();
 

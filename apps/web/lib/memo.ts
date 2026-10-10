@@ -98,7 +98,10 @@ export function buildMemo(a: { inp: CaseInput; months: string[]; series: Monthly
   // exemption facts (cl.2 small-loan threshold, cl.11) so the reasons text verifies
   F("brv", a.pdn.brv, fmtUZS(a.pdn.brv), "cl.2 (BRV)");
   F("brv_multiple", 50, "50", "cl.2");
+  F("brv_multiple_75", 75, "75", "cl.2");
   F("brv_threshold", 50 * a.pdn.brv, fmtUZS(50 * a.pdn.brv), "cl.2");
+  F("brv_threshold_75", 75 * a.pdn.brv, fmtUZS(75 * a.pdn.brv), "cl.2");
+  F("quota_15", 15, "15", "cl.2 (2024)");
   if (a.pdn.exemptReason) F("exempt_reason", a.pdn.exemptReason, a.pdn.exemptReason, a.pdn.exemptCitation ?? "rules");
   const p6: MemoSection = { title: "6. Recommendation", paragraphs: [] };
   p6.paragraphs.push({ text: `${recLabel[a.recommendation]}. ${a.reasons.join(" ")}`, sources: ["rules", "model", "integrity"] });

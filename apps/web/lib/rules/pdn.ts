@@ -14,7 +14,7 @@ export const CITATIONS = {
   definition: { id: "cl.1", text: "ПДН = average monthly payments on loans/microloans ÷ average monthly income of the borrower (and co-borrower)." },
   scope: { id: "cl.2", text: "Calculated when issuing a loan, raising a limit, extending a term; includes the application under review and all loan agreements with all lenders, plus loans where the applicant is a co-borrower." },
   guarantor: { id: "cl.4", text: "Loans where the applicant is a guarantor count only if payments are more than 30 days overdue at the calculation date (\"улар бўйича 30 кундан ортиқ муддати ўтган тўловлари мавжуд бўлса\")." },
-  smallLoan: { id: "cl.2 (2024)", text: "Excluded when the requested amount plus outstanding principal on existing loans does not exceed 50 BRV (\"базавий ҳисоблаш миқдорининг 50 бараваридан ошмаганда\"); for self-employed borrowers at microfinance organisations the threshold is 75 BRV." },
+  smallLoan: { id: "cl.2 (2024)", text: "Microfinance organisations and pawnshops only («микромолия ташкилоти ва ломбард томонидан…»): excluded when the requested amount plus outstanding principal does not exceed 50 BRV (\"базавий ҳисоблаш миқдорининг 50 бараваридан ошмаганда\"); 75 BRV when a microfinance organisation lends to a self-employed borrower. Banks have no such threshold." },
   term36: { id: "cl.4¹", text: "If a loan term exceeds 36 months, total payments are spread evenly over 36 months (\"барча тўловлар 36 ойга тенг миқдорда тақсимланади\")." },
   mortgage180: { id: "cl.4¹", text: "Mortgages over 180 months are spread over 180 months." },
   income12: { id: "cl.7", text: "Average monthly income = arithmetic mean of income received over the last 12 months (\"охирги 12 ой ичида олган даромадлари миқдорининг ўртача арифметик қиймати\"); co-borrower income is added." },
@@ -22,10 +22,14 @@ export const CITATIONS = {
   cap: { id: "cl.10", text: "From 1 January 2025 the ratio must not exceed 50% (\"қарз юки кўрсаткичи 50 фоиздан ошмаслиги керак\"; 60% between 1 July 2024 and 1 January 2025)." },
   familyExempt: { id: "cl.11", text: "Loans issued under family-entrepreneurship development programmes are exempt from the ratio requirement (\"оилавий тадбиркорликни ривожлантириш дастурлари доирасида ажратиладиган кредитларга нисбатан татбиқ этилмайди\")." },
   calcDate: { id: "cl.6", text: "The calculation date must be within 10 calendar days of the loan date." },
-  portfolioAllowance: { id: "cl.2 (2024)", text: "Bank-level allowance: up to 15% of the number of a bank's loans and microloans to individuals may be issued outside the ratio requirement (\"микроқарзлар сонининг энг кўпи билан 15 фоизигача бўлган миқдорида\"). A portfolio quota tracked by the bank's risk function, not a per-application rule — Daromad reports the ratio for every application and leaves the quota decision to the bank." },
+  portfolioAllowance: { id: "cl.2 (2024)", text: "Banks («банк томонидан…»): the only relief is a portfolio quota — up to 15% of the number of a bank's loans and microloans to individuals may be issued outside the ratio requirement (\"микроқарзлар сонининг энг кўпи билан 15 фоизигача бўлган миқдорида\"). It is tracked by the bank's risk function, not decided per application: Daromad computes the ratio for every bank application and shows the quota as a note." },
 } as const;
 
+export type LenderType = "bank" | "mfo" | "pawnshop";
+
 export interface PdnInput {
+  lenderType?: LenderType;          // default "bank" (MKBANK). The small-loan exclusions belong to MFOs/pawnshops only.
+  selfEmployed?: boolean;           // applicant holds a self-employed registration (75-BRV line for MFOs)
   monthlyIncome: number[];          // regulatory income for the 12 months, UZS
   coBorrowerMonthlyIncome?: number; // optional, mean monthly
   existingLoans: ExistingLoan[];
@@ -54,6 +58,7 @@ export interface PdnResult {
   citations: (keyof typeof CITATIONS)[];
   brv: number;
   warnings: string[];
+  lenderType: LenderType;
 }
 
 /** Normalise a monthly payment per cl.4¹ (terms over 36 months spread over 36). */
@@ -94,12 +99,18 @@ export function computePdn(inp: PdnInput): PdnResult {
   const total = existingTotal + newPayment;
   const ratio = incomeBase > 0 ? total / incomeBase : Number.POSITIVE_INFINITY;
 
+  const lender: LenderType = inp.lenderType ?? "bank";
   let exempt = false, exemptReason: string | undefined, exemptCitation: keyof typeof CITATIONS | undefined;
   if (req.product === "family_program") {
     exempt = true; exemptReason = "Family-entrepreneurship programme loan"; exemptCitation = "familyExempt";
-  } else if (req.amount + outstanding <= 50 * brv) {
-    exempt = true; exemptReason = `Requested amount + outstanding principal ≤ 50 BRV (${(50 * brv).toLocaleString("en-US")} UZS)`; exemptCitation = "smallLoan";
+  } else if (lender !== "bank") {
+    // the small-loan exclusions are written for microfinance organisations and pawnshops only
+    const mult = lender === "mfo" && inp.selfEmployed ? 75 : 50;
+    if (req.amount + outstanding <= mult * brv) {
+      exempt = true; exemptReason = `${lender === "mfo" ? "Microfinance organisation" : "Pawnshop"}: requested amount + outstanding principal ≤ ${mult} BRV (${(mult * brv).toLocaleString("en-US")} UZS)`; exemptCitation = "smallLoan";
+    }
   }
+  if (lender === "bank") warnings.push("Bank lender: no small-loan exclusion applies; the only relief is the bank-level 15% quota (cl.2, 2024), which is a portfolio decision, not this application's.");
 
   // max affordable amount at the requested term: ratio(amount) <= cap, monotone in amount → bisection
   let maxAffordable = 0;
@@ -119,10 +130,11 @@ export function computePdn(inp: PdnInput): PdnResult {
   if (existing.some((l) => l.citation === "term36") || req.term_months > 36) citations.push("term36");
   if (existing.some((l) => l.citation === "guarantor")) citations.push("guarantor");
   if (exemptCitation) citations.push(exemptCitation);
+  if (lender === "bank") citations.push("portfolioAllowance");
   return {
     version: RULE_ENGINE_VERSION, meanIncome, coBorrowerIncome: coInc, incomeBase, existingPayments: existing,
     newPayment, totalPayments: total, ratio, cap: PDN_CAP, exempt, exemptReason, exemptCitation,
     passes: exempt || ratio <= PDN_CAP, maxAffordableAmount: maxAffordable, headroom: PDN_CAP - ratio,
-    citations, brv, warnings,
+    citations, brv, warnings, lenderType: lender,
   };
 }
