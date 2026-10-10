@@ -16,7 +16,7 @@
 | Jinja2, qrcode, openpyxl | templates, QR codes, XLSX output | BSD-3 / BSD / MIT | — |
 | DejaVu fonts (system) | rendering | Bitstream Vera / public domain | — |
 | **CBU regulation on the debt-burden ratio of individual borrowers** and Board Resolution 42/16 (2024 amendments) | rule engine, clause citations | public legal information | https://lex.uz/ru/docs/4654149 · https://lex.uz/ru/docs/6809992 |
-| CBU microloan rules (July 2025), MKBANK product pages, stat.uz wage releases, CBU problem-loan statistics | calibration anchors (`AVG_WAGE_UZS`, `BRV_UZS`, default-rate assumption), business case | public information, cited in the deck | mkbank.uz · stat.uz · cbu.uz |
+| CBU microloan rules (July 2025), MKBANK product pages, stat.uz wage releases, CBU problem-loan statistics, BRV table (440,000 UZS from 1 Sep 2026) | calibration anchors (`AVG_WAGE_UZS`, `BRV_UZS`, default-rate assumption), business case | public information, cited in the deck | mkbank.uz · stat.uz · cbu.uz · buxgalter.uz |
 
 ## What is *not* used
 
