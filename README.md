@@ -38,8 +38,8 @@ apps/web/        Next.js 16 app (static export). All document parsing, OCR, rule
 synth/           synthetic data generator (archetypes → 24 months of transactions → PDF/XLSX/CSV statements, receipt photos, certificates, tampered variants)
 ml/              feature spec, training (XGBoost), Berka real-data validation, exported artifacts
 data/synthetic/  generated data set (summary.json committed; regenerate with one command)
-docs/            ARCHITECTURE.md, DATA_SOURCES.md, MODEL_CARD.md, DECK_SCRIPT.md
-deck/            defence deck
+docs/            ARCHITECTURE.md, DATA_SOURCES.md, MODEL_CARD.md, REGULATION_QUOTES.md, Daromad_project_explained.docx
+deck/            defence deck (build_deck.js reads the evaluation JSON and screenshots)
 .github/workflows/ci.yml   tests + build on every push
 ```
 

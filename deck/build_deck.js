@@ -1,4 +1,6 @@
-// Builds deck/Daromad_TYS_deck.pptx from the evaluation JSON and screenshots. Run: node build_deck.js [VERCEL_URL]
+// Builds deck/Daromad_TYS_deck.pptx from the evaluation JSON and screenshots.
+// Run: node build_deck.js [VERCEL_URL]            → public deck
+//      node build_deck.js [VERCEL_URL] --notes    → Daromad_TYS_deck.private.pptx, a rehearsal copy that embeds notes.private.json if present (git-ignored)
 const pptxgen = require("pptxgenjs");
 const fs = require("fs");
 const path = require("path");
@@ -50,11 +52,17 @@ pres.defineSlideMaster({ title: "CONTENT", background: { color: HEX.lt1 },
     { text: { text: "Daromad · team TYS", options: { x: 0.6, y: 7.05, w: 4, h: 0.3, fontSize: 9, color: HEX.accent4, margin: 0 } } }],
   slideNumber: { x: 12.3, y: 7.05, w: 0.6, h: 0.3, fontSize: 9, color: HEX.accent4 } });
 
-const notesFor = {};
-function slide(master, section, title, notes) {
+// Rehearsal notes, if any, live in deck/notes.private.json (git-ignored, keyed by slide number) and are embedded
+// only when the deck is built with --notes, which writes the separate file Daromad_TYS_deck.private.pptx.
+const WITH_NOTES = process.argv.includes("--notes");
+const NOTES_FILE = path.join(__dirname, "notes.private.json");
+const NOTES = WITH_NOTES && fs.existsSync(NOTES_FILE) ? JSON.parse(fs.readFileSync(NOTES_FILE, "utf8")) : {};
+let slideNo = 0;
+function slide(master, section, title) {
+  slideNo++;
   const s = pres.addSlide({ masterName: master, sectionTitle: section });
   if (title) s.addText(title, { placeholder: "title" });
-  if (notes) s.addNotes(notes);
+  if (NOTES[slideNo]) s.addNotes(NOTES[slideNo]);
   return s;
 }
 function tile(s, x, y, w, h, value, label, opts = {}) {
@@ -78,7 +86,7 @@ const pct = (v, d = 1) => (v * 100).toFixed(d) + "%";
 
   // 1 — title
   pres.addSection({ title: "Opening" });
-  let s = slide("DARK", "Opening", null, "Daromad, team TYS. Partner product for MKBANK's micro and family-business credit department. We remove the hour an officer spends turning a self-employed borrower's statements into an income figure the regulator accepts. [0:15]");
+  let s = slide("DARK", "Opening", null);
   s.addText("Daromad", { x: 0.7, y: 1.5, w: 8, h: 1.2, fontSize: 60, bold: true, color: HEX.lt1, margin: 0, isTextBox: true, objectName: "brand" });
   s.addText("Income evidence for borrowers who have no payslip", { x: 0.7, y: 2.7, w: 11, h: 0.8, fontSize: 28, color: HEX.lt2, margin: 0, isTextBox: true, objectName: "tagline" });
   s.addShape(pres.ShapeType.roundRect, { x: 0.7, y: 3.8, w: 7.6, h: 0.6, fill: { color: HEX.accent2 }, line: { color: HEX.accent2 }, rectRadius: 0.1, objectName: "mode pill" });
@@ -91,8 +99,7 @@ const pct = (v, d = 1) => (v * 100).toFixed(d) + "%";
 
   // 2 — the clause-9 slide
   pres.addSection({ title: "Problem" });
-  s = slide("CONTENT", "Problem", "The regulation names the evidence — the self-employed have exactly one line",
-    "Show the regulation's list of acceptable income evidence. For a self-employed borrower only one line exists: income credited to bank accounts — no employer, no pension, income untaxed and unfiled. MKBANK targets about 140,000 micro-projects this year, by its own figures. Every one of them needs a documented income assessment, and every one outside the family programme needs a ПДН under 50 percent — for a bank there is no small-loan exclusion — computed from documents like these. Fiscal receipts exist only where the business uses an online cash register; we read them as corroboration, not as the income figure. [0:45]");
+  s = slide("CONTENT", "Problem", "The regulation names the evidence — the self-employed have exactly one line");
   s.addText("CBU regulation on the debt-burden ratio, cl.9 — income a lender may rely on", { x: 0.6, y: 1.4, w: 7.2, h: 0.4, fontSize: 14, bold: true, color: HEX.accent4, margin: 0, isTextBox: true, objectName: "list caption" });
   const ev = [["Employer-confirmed salary", "no employer — the borrower is the business", false], ["Pension", "working-age applicant, not a pensioner", false], ["Funded-pension contributions", "none: contributions come through an employer", false], ["Income credited to the borrower's bank accounts", "the only line a self-employed borrower has", true], ["Taxes paid", "self-employed income is untaxed; no return is filed", false], ["Interest, dividends, rental income", "rarely applicable; easy to document when it is", false]];
   ev.forEach(([t, why, hot], i) => {
@@ -109,8 +116,7 @@ const pct = (v, d = 1) => (v * 100).toFixed(d) + "%";
 
   // 3 — what the officer gets
   pres.addSection({ title: "Product" });
-  s = slide("CONTENT", "Product", "What the officer gets in under five seconds",
-    "This is the screen after Load sample A. Statement parsed in the browser, twelve months of regulatory income with business revenue separated, ПДН with each line citing its clause, maximum affordable amount, and a what-if slider. [part of demo narration]");
+  s = slide("CONTENT", "Product", "What the officer gets in under five seconds");
   s.addImage({ path: path.join(IMG, "income_pdn.png"), x: 0.6, y: 1.45, w: 8.6, h: 3.0, objectName: "screenshot income and pdn" });
   s.addImage({ path: path.join(IMG, "memo.png"), x: 0.6, y: 4.6, w: 8.6, h: 2.3, objectName: "screenshot memo" });
   const got = [["FiTrendingUp", "12-month regulatory income", "cl.7 mean, cl.9 definition; own-card transfers, loan proceeds, refunds and cash deposits excluded"],
@@ -126,8 +132,7 @@ const pct = (v, d = 1) => (v * 100).toFixed(d) + "%";
   });
 
   // 4 — live demo
-  s = slide("CONTENT", "Product", "Live demo — on our samples and on anything you upload",
-    "Open the public URL. Load sample A. Narrate: statement parsed, certificate read, receipt OCR'd in Uzbek; twelve months of income; ПДН just above 50 percent, so the engine computes the maximum affordable amount; drag the slider under it; integrity checks; the memo badge shows how many numbers were checked and that none is unsourced; click a citation to open the statement lines behind a figure; record the decision; export. If a judge hands you a receipt photo or a statement, upload it. Finish with Load tampered statement (it starts a fresh case): the balance-chain check fails and names the edited line. Keep the backup video open in a second tab. [2:00]");
+  s = slide("CONTENT", "Product", "Live demo — on our samples and on anything you upload");
   s.addShape(pres.ShapeType.roundRect, { x: 0.6, y: 1.45, w: 6.1, h: 1.3, fill: { color: HEX.accent1 }, line: { color: HEX.accent1 }, rectRadius: 0.1, objectName: "url box" });
   s.addImage({ data: ic.FiGlobe, x: 0.8, y: 1.85, w: 0.5, h: 0.5, objectName: "globe" });
   s.addText([{ text: "Open on your laptop or phone\n", options: { fontSize: 12, color: HEX.accent6 } }, { text: SITE, options: { fontSize: 18, bold: true, color: HEX.lt1 } }], { x: 1.45, y: 1.5, w: 5.1, h: 1.2, margin: 0, isTextBox: true, valign: "middle", objectName: "url" });
@@ -145,8 +150,7 @@ const pct = (v, d = 1) => (v * 100).toFixed(d) + "%";
 
   // 5 — architecture
   pres.addSection({ title: "Technology" });
-  s = slide("CONTENT", "Technology", "Seven components, one optional language model, zero API keys",
-    "This is a system, not a prompt: parsing with coordinates, a multilingual categoriser, cash-flow reconstruction, a rule engine mapped clause by clause, boosted trees with monotone constraints, integrity checks, and a template memo with a verifier. No API key exists in this product. Production is the same bundle on the bank's server — the perimeter is literal. [0:45]");
+  s = slide("CONTENT", "Technology", "Seven components, one optional language model, zero API keys");
   const comps = [["FiFileText", "1 · Intake", "pdf.js with coordinates; XLSX/CSV; tesseract.js OCR uzb+rus+eng, self-hosted; field confidence, tap-to-confirm"],
     ["FiTag", "2 · Categoriser", "multilingual rules + counterparty patterns (recurring payer → family; same mask both ways → own card)"],
     ["FiTrendingUp", "3 · Cash-flow", "12-month series; 18 features identical in TypeScript and Python (parity test)"],
@@ -171,8 +175,7 @@ const pct = (v, d = 1) => (v * 100).toFixed(d) + "%";
   s.addText("Human in the loop: the engine recommends and computes the maximum affordable amount; the officer decides; an override needs a reason, written into the chain.", { x: 0.6, y: 6.25, w: 9, h: 0.5, fontSize: 11, color: HEX.dk1, margin: 0, isTextBox: true, objectName: "hitl" });
 
   // 6 — numbers
-  s = slide("CONTENT", "Technology", "Measured through the real app, not typed into a slide",
-    `Measured through the real app: statement parsing exact on ${SE.statements.rows_exact} of ${SE.statements.n} generator PDFs — and, more importantly, exact on ${OOD.exact_count} of ${OOD.n} layouts the parser had never seen: signed-amount CSV, Kirim/Chiqim Excel, quoted English CSV with a type column, Unicode minus, headerless, Приход/Расход TSV, and a Payme-style wallet export with a plus/minus type column and no balance. Tamper recall ${SE.tampered.detected} of ${SE.tampered.n} with no false alarms on clean statements; receipt OCR ${pct(O.total_ok_rate, 0)} on totals, ${pct(O.inn_ok_rate, 0)} on INN. Risk model: AUC ${M.xgb.auc.toFixed(3)} on our declared synthetic population — proves the pipeline, not the world. So we ran the same 18 features on real anonymised bank data, ${B.loans_used} loans from PKDD'99, 44 of them bad: AUC ${B.xgb_auc.toFixed(2)} out-of-fold, confidence interval roughly 0.86 to 0.94, versus ${B.pdn_only_auc.toFixed(2)} for the ratio alone. Logistic regression is close — we keep the trees for monotone constraints and thresholds, not for the last hundredth. [0:45]`);
+  s = slide("CONTENT", "Technology", "Measured through the real app, not typed into a slide");
   const tiles = [[`${SE.statements.rows_exact}/${SE.statements.n}`, "generator PDFs: exact rows, balance chain reconciled (2 layouts, RU/UZ)"],
     [`${OOD.exact_count}/${OOD.n}`, "unseen layouts exact — CSV/XLSX/TSV variants incl. a wallet export (list on the model card)"],
     [`${SE.tampered.detected}/${SE.tampered.n}`, "tampered statements caught, 4 tamper types; 0 false alarms on clean ones"],
@@ -194,8 +197,7 @@ const pct = (v, d = 1) => (v * 100).toFixed(d) + "%";
   s.addText("Caveat on the slide, not in the footnote: the risk score is advisory until retrained on the bank's own history inside the perimeter — that is the pilot's first deliverable.", { x: 8.1, y: 5.6, w: 4.7, h: 1.3, fontSize: 11, bold: true, color: HEX.accent5, margin: 0, isTextBox: true, objectName: "caveat" });
 
   // 7 — synthetic data
-  s = slide("CONTENT", "Technology", "No partner data, so we built a declared generator",
-    "Ten archetypes anchored to stat.uz wages, 24 months of daily transactions, rendered to PDFs with a text layer in two layouts, receipts photographed through a camera model, four tamper types. Every parameter is in the repo. The jury can regenerate everything with one command. [0:30]");
+  s = slide("CONTENT", "Technology", "No partner data, so we built a declared generator");
   const gen = [["Archetypes", "10 trades (tailor, taxi, dehkan farmer, grocer, reseller, tutor…) with declared seasonality, customer counts, channel mix, expense structure"],
     ["Simulation", `${SUM.n_borrowers.toLocaleString("en-US")} borrowers · ${SUM.n_transactions.toLocaleString("en-US")} transactions · existing loans with annuity schedules · shocks · default label from a latent affordability score (${pct(SUM.default_rate)} rate)`],
     ["Rendering", `${SUM.rendered_borrowers} statement sets as PDF (text layer) + XLSX + CSV in RU and UZ layouts; ${SUM.receipts} fiscal receipts; Soliq-style certificates with QR`],
@@ -216,8 +218,7 @@ const pct = (v, d = 1) => (v * 100).toFixed(d) + "%";
 
   // 8 — pilot budget and ROI
   pres.addSection({ title: "Business" });
-  s = slide("CONTENT", "Business", "Pilot: three months, five branches, fifty mahalla agents",
-    "Cost: our three people plus one bank analyst, one small VM — no GPU, no licences, no API spend; marginal cost per application is zero; about 190 million for three months. Value, with two assumptions the pilot exists to measure: document handling falls from about 90 to 25 minutes, and about 30 percent of MKBANK's 140,000 micro-project applications are addressable — those outside the ПДН-exempt family programme; for a bank there is no small-loan threshold. That is 42,000 applications, 45,000 officer-hours, 23 full-time officers, about 4 billion sum a year at a 15-million loaded monthly cost. The pilot does not pay for itself in five branches; the roll-out does, within its first month. Even at a 10 percent addressable share it pays back within two months. Every term is a slider. [1:30]");
+  s = slide("CONTENT", "Business", "Pilot: three months, five branches, fifty mahalla agents");
   s.addText("Cost to build and run the pilot (assumptions, UZS)", { x: 0.6, y: 1.4, w: 6.2, h: 0.4, fontSize: 14, bold: true, color: HEX.accent4, margin: 0, isTextBox: true, objectName: "cost caption" });
   const costRows = [["Line", "Assumption", "3-month cost"],
     ["Team: 3 engineers/analysts (TYS)", "3 × 3 months × 15M", "135M"],
@@ -240,8 +241,7 @@ const pct = (v, d = 1) => (v * 100).toFixed(d) + "%";
   s.addText("Who pays: MKBANK (credit department / digital budget). Who owns: micro & family-business credit department; IT deploys; mahalla agents and loan officers use it.", { x: 7.1, y: 6.1, w: 5.7, h: 0.7, fontSize: 10.5, color: HEX.accent4, margin: 0, isTextBox: true, objectName: "owner" });
 
   // 9 — replication and next steps
-  s = slide("CONTENT", "Business", "Hard to copy in a weekend — and what comes next",
-    "What another team cannot rebuild in a weekend: the Uzbek layout corpus and parsers, the categoriser lexicon, the clause-mapped rule engine with its exemptions, the verifier that makes unsourced numbers impossible, and the calibrated synthetic population. Next: scanned-statement OCR, core-banking pull for MKBANK's own account holders, retraining inside the perimeter. Thank you. [0:30]");
+  s = slide("CONTENT", "Business", "Hard to copy in a weekend — and what comes next");
   card(s, 0.6, 1.45, 6.0, 5.35, "replication card");
   s.addImage({ data: ic.FiLock, x: 0.8, y: 1.65, w: 0.4, h: 0.4, objectName: "lock icon" });
   s.addText("The replication test — what the same LLM tools do not give you", { x: 1.3, y: 1.6, w: 5.1, h: 0.5, fontSize: 14, bold: true, color: HEX.dk2, margin: 0, isTextBox: true, valign: "middle", objectName: "replication head" });
@@ -262,7 +262,7 @@ const pct = (v, d = 1) => (v * 100).toFixed(d) + "%";
 
   // 10 — closing
   pres.addSection({ title: "Closing" });
-  s = slide("DARK", "Closing", "Daromad", "Thank you. Questions.");
+  s = slide("DARK", "Closing", "Daromad");
   s.addText("Income evidence for borrowers who have no payslip — regulation-native, perimeter-native, verified.", { placeholder: "body" });
   s.addText([{ text: "Live:  ", options: { bold: true } }, { text: SITE + "\n" }, { text: "Repo:  ", options: { bold: true } }, { text: REPO + "\n" }, { text: "Team TYS:  ", options: { bold: true } }, { text: "Munisbek · Jahongir · Umida" }],
     { x: 0.7, y: 5.0, w: 11.9, h: 1.5, fontSize: 15, color: HEX.accent6, margin: 0, isTextBox: true, objectName: "closing links" });
@@ -315,7 +315,7 @@ const pct = (v, d = 1) => (v * 100).toFixed(d) + "%";
     { x: 0.6, y: 1.45, w: 12.1, colW: [5.0, 3.0, 4.1], rowH: 0.55, border: { type: "solid", color: HEX.lt2, pt: 0.5 }, objectName: "data table" });
   s.addText("Rules compliance: no hard-coded answers (every figure computed from uploaded documents at run time); no real personal or confidential data; all code written during the final by team TYS with LLM coding assistance (declared); deployment from the submitted repository; CI on every push.", { x: 0.6, y: 6.0, w: 12.1, h: 0.8, fontSize: 10.5, color: HEX.dk1, margin: 0, isTextBox: true, objectName: "compliance" });
 
-  const out = path.join(__dirname, "Daromad_TYS_deck.pptx");
+  const out = path.join(__dirname, WITH_NOTES ? "Daromad_TYS_deck.private.pptx" : "Daromad_TYS_deck.pptx");
   await pres.writeFile({ fileName: out });
   await applyTheme(out, THEME);
   console.log("wrote", out);

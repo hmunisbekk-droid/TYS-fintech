@@ -20,3 +20,6 @@ apps/web/*.tsbuildinfo
 
 # desktop-app delivery folder
 Claude outputs/
+
+# private rehearsal material (notes, script, notes deck) — never committed
+*.private.*
