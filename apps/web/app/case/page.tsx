@@ -1,5 +1,6 @@
 "use client";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { PARSER_VERSION } from "../../lib/parse/common";
 import IncomeChart from "@/components/IncomeChart";
 import { AuditLog, type AuditEntry } from "@/lib/audit";
 import { runCase, type CaseResult, type Recommendation } from "@/lib/case";
@@ -89,7 +90,7 @@ export default function CasePage() {
         const h = await sha(await f.arrayBuffer());
         setDocs((d) => [...d, doc]);
         if (doc.kind === "statement" && !applicant && doc.holderName) setApplicant(doc.holderName);
-        await log.current.append("document_added", { file: f.name, sha256: h, kind: doc.kind, rows: doc.transactions.length, fields: doc.fields.length },
+        await log.current.append("document_added", { file: f.name, sha256: h, kind: doc.kind, rows: doc.transactions.length, fields: doc.fields.length, parser: PARSER_VERSION },
           `${f.name} → ${doc.kind}, ${doc.transactions.length} rows, ${doc.fields.length} fields (sha256 ${h.slice(0, 12)}…)`);
         setAudit([...log.current.entries]);
       } catch (e) {
@@ -201,10 +202,10 @@ export default function CasePage() {
             <label className="field">Term (months)<select value={request.term_months} onChange={(e) => setRequest({ ...request, term_months: Number(e.target.value) })}>{[6, 12, 18, 24, 36, 48, 60].map((t) => <option key={t} value={t}>{t}</option>)}</select></label>
             <label className="field">Rate p.a.<input type="number" step={0.01} value={request.annual_rate} onChange={(e) => setRequest({ ...request, annual_rate: Number(e.target.value) })} /></label>
             <label className="field">Co-borrower income / month<input type="number" step={100_000} value={coIncome} onChange={(e) => setCoIncome(Number(e.target.value))} /></label>
-            <label className="field">Lender type<select value={lenderType} onChange={(e) => setLenderType(e.target.value as LenderType)}>
-              <option value="bank">Bank (MKBANK) — no small-loan exclusion</option>
-              <option value="mfo">Microfinance organisation — 50 BRV / 75 BRV self-employed</option>
-              <option value="pawnshop">Pawnshop — 50 BRV</option></select></label>
+            <label className="field" title="Bank: no small-loan exclusion (15% portfolio quota only). MFO: 50 BRV, 75 BRV for self-employed borrowers. Pawnshop: 50 BRV.">Lender type<select value={lenderType} onChange={(e) => setLenderType(e.target.value as LenderType)}>
+              <option value="bank">Bank (MKBANK)</option>
+              <option value="mfo">MFO</option>
+              <option value="pawnshop">Pawnshop</option></select></label>
           </div>
           <h3 style={{ marginTop: ".8rem" }}>Existing obligations <span className="muted small">(credit bureau in production; editable here)</span></h3>
           <div className="tscroll"><table><thead><tr><th>Lender</th><th className="num">Monthly payment</th><th className="num">Term</th><th className="num">Outstanding</th><th className="num">DPD</th><th>Role</th><th></th></tr></thead>
@@ -337,7 +338,7 @@ export default function CasePage() {
               <tbody>{audit.map((e) => <tr key={e.seq}><td>{e.seq}</td><td className="small">{e.ts.slice(11, 19)}</td><td className="mono small">{e.event}</td><td className="small">{e.summary}</td><td className="mono small">{e.hash.slice(0, 10)}…</td></tr>)}</tbody></table></div>
             <div className="row" style={{ marginTop: ".6rem" }}>
               <button className="btn" onClick={exportCase}>Export case + audit (JSON)</button>
-              <span className="muted small">Engine versions: rules {result.engineVersions.rules} · model {result.engineVersions.model} · categoriser {result.engineVersions.categorizer} · timings {Object.entries(result.timings).map(([k, v]) => `${k} ${v.toFixed(0)}ms`).join(", ")}</span>
+              <span className="muted small">Engine versions: rules {result.engineVersions.rules} · model {result.engineVersions.model} · categoriser {result.engineVersions.categorizer} · parsers {result.engineVersions.parsers} · timings {Object.entries(result.timings).map(([k, v]) => `${k} ${v.toFixed(0)}ms`).join(", ")}</span>
             </div>
           </div>
         </>

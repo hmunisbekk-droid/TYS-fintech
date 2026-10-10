@@ -59,13 +59,15 @@ code, .mono { font-family: var(--mono); font-size: .9em; }
 @media (max-width: 860px) { .grid2, .grid3 { grid-template-columns: minmax(0, 1fr); } }
 .tscroll { overflow-x: auto; max-width: 100%; -webkit-overflow-scrolling: touch; }
 .tscroll table { min-width: 100%; }
+.tscroll table.wide { min-width: 640px; }   /* long-text tables scroll sideways on phones instead of wrapping one word per line */
 table.fields td.fname { width: 7.5rem; white-space: nowrap; }
 table.fields td.fval { min-width: 180px; }
 table.fields td.fval input { width: 100%; min-width: 160px; }
 .card { min-width: 0; }
 .wrap { overflow-x: hidden; }
 .kpi { min-width: 130px; flex: 1 1 130px; }
-label.field input, label.field select { max-width: 100%; }
+label.field input, label.field select { max-width: 100%; width: 100%; box-sizing: border-box; }
+label.field select { text-overflow: ellipsis; }
 @media (max-width: 600px) { .nav { gap: .7rem; flex-wrap: wrap; } .nav .pill { display: none; } .evidence { width: calc(100vw - 32px); right: 16px; } .hero h1 { font-size: 1.6rem; } .steps { display: none; } }
 .row { display: flex; gap: .6rem; flex-wrap: wrap; align-items: center; }
 .btn { display: inline-flex; align-items: center; gap: .4rem; padding: .5rem .9rem; border-radius: 8px; border: 1px solid var(--border); background: var(--surface-2); color: var(--text); font-weight: 600; cursor: pointer; font-size: .92rem; }

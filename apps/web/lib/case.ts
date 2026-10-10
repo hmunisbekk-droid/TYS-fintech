@@ -3,6 +3,7 @@ import { categorizeAll } from "./categorize";
 import { computeFeatures, last12Months, monthlySeries, type Features } from "./features";
 import { runIntegrityChecks, type Check } from "./integrity";
 import { buildMemo, fmtPct, fmtUZS, type Memo } from "./memo";
+import { PARSER_VERSION } from "./parse/common";
 import { computePdn, type LenderType, type PdnResult } from "./rules/pdn";
 import { attributions, predictProbability, riskBand, type Attribution, type FeatureStats, type RiskModel } from "./risk";
 import type { ExistingLoan, LoanRequest, MonthlySeries, ParsedDocument, Transaction } from "./types";
@@ -33,7 +34,7 @@ export interface CaseResult {
   recommendationReasons: string[];
   memo: Memo;
   timings: Record<string, number>;
-  engineVersions: { rules: string; model: string; categorizer: string };
+  engineVersions: { rules: string; model: string; categorizer: string; parsers: string };
 }
 
 export const CATEGORIZER_VERSION = "rules-2026.10.10";
@@ -105,5 +106,5 @@ export function runCase(inp: CaseInput, model: RiskModel, stats: FeatureStats): 
   const memo = buildMemo({ inp, months, series, features, pdn, probability, band, attributions: attr, checks, recommendation: rec, reasons });
   timings.memo = performance.now() - t;
   return { months, transactions: txs, series, features, pdn, probability, band, attributions: attr, checks, recommendation: rec,
-    recommendationReasons: reasons, memo, timings, engineVersions: { rules: pdn.version, model: model.version, categorizer: CATEGORIZER_VERSION } };
+    recommendationReasons: reasons, memo, timings, engineVersions: { rules: pdn.version, model: model.version, categorizer: CATEGORIZER_VERSION, parsers: PARSER_VERSION } };
 }

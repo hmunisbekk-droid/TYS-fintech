@@ -114,8 +114,8 @@ export default function ModelPage() {
         <h2>Unseen statement layouts (out-of-distribution test)</h2>
         {ood ? (<>
           <div className="row"><div className="kpi"><span className="v">{ood.exact_count}/{ood.n}</span><span className="l">layouts parsed with exact row count and exact credit/debit totals</span></div></div>
-          <table style={{ marginTop: ".6rem" }}><thead><tr><th>Layout</th><th className="num">rows</th><th>exact</th><th>parser note</th></tr></thead><tbody>
-            {ood.layouts.map((l) => <tr key={l.layout}><td>{l.layout}</td><td className="num">{l.rows}/{l.rows_truth}</td><td><span className={`tag ${l.exact ? "good" : "bad"}`}>{l.exact ? "exact" : "miss"}</span></td><td className="small muted">{l.warnings.join(" ") || "—"}</td></tr>)}</tbody></table>
+          <div className="tscroll"><table className="wide" style={{ marginTop: ".6rem" }}><thead><tr><th>Layout</th><th className="num">rows</th><th>exact</th><th>parser note</th></tr></thead><tbody>
+            {ood.layouts.map((l) => <tr key={l.layout}><td>{l.layout}</td><td className="num">{l.rows}/{l.rows_truth}</td><td><span className={`tag ${l.exact ? "good" : "bad"}`}>{l.exact ? "exact" : "miss"}</span></td><td className="small muted">{l.warnings.join(" ") || "—"}</td></tr>)}</tbody></table></div>
           <p className="small muted">{ood.note} Rows are ground truth; the generator never produced these formats, so this is the closest proxy for a jury-supplied statement.</p>
         </>) : <p className="muted">run <code>npm test</code> to produce this file</p>}
       </div>

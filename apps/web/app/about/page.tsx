@@ -32,18 +32,18 @@ export default function About() {
 
       <div className="card">
         <h2>Data sources and licences</h2>
-        <table><thead><tr><th>Source</th><th>Used for</th><th>Licence / terms</th></tr></thead><tbody>
+        <div className="tscroll"><table className="wide"><thead><tr><th>Source</th><th>Used for</th><th>Licence / terms</th></tr></thead><tbody>
           <tr><td>Daromad synthetic generator (<code>synth/</code>, seed 42): 2,000 borrowers, 5.7M transactions, 60 rendered statement sets, 180 receipts, 40 tampered statements</td><td>Training, evaluation, demo samples</td><td>MIT (this repository). Parameters declared in <code>data/synthetic/summary.json</code>. No real person represented.</td></tr>
           <tr><td>Berka / PKDD&apos;99 Financial data set (Czech bank, 1993–98), mirror github.com/jlacko/berka-dataset</td><td>Methodology validation of cash-flow features → default on real anonymised data</td><td>Academic challenge data; no licence stated by the original authors — used for evaluation only, not redistributed in this repo</td></tr>
           <tr><td>Tesseract language data (tessdata_fast: uzb, uzb_cyrl, rus, eng)</td><td>Receipt OCR</td><td>Apache 2.0</td></tr>
           <tr><td>tesseract.js, tesseract.js-core</td><td>OCR runtime</td><td>Apache 2.0</td></tr>
           <tr><td>pdf.js (pdfjs-dist)</td><td>PDF text extraction</td><td>Apache 2.0</td></tr>
-          <tr><td>SheetJS (xlsx 0.18.5)</td><td>XLSX/CSV parsing</td><td>Apache 2.0</td></tr>
+          <tr><td>SheetJS CE 0.20.3 (npm alias <code>@e965/xlsx</code>, an automated republish of the vendor build)</td><td>XLSX/CSV parsing</td><td>Apache 2.0</td></tr>
           <tr><td>XGBoost, scikit-learn, NumPy, pandas, OpenCV, Playwright, Jinja2, qrcode</td><td>Training and synthetic rendering</td><td>Apache 2.0 / BSD-3 / MIT (see README)</td></tr>
           <tr><td>Next.js, React</td><td>Application</td><td>MIT</td></tr>
           <tr><td>CBU regulation texts (lex.uz)</td><td>Rule engine, citations</td><td>Public legal information</td></tr>
           <tr><td>stat.uz wage releases; CBU statistics; MKBANK public pages</td><td>Calibration anchors and business case</td><td>Public information, cited in the deck</td></tr>
-        </tbody></table>
+        </tbody></table></div>
       </div>
 
       <div className="card">

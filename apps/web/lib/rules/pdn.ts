@@ -5,7 +5,7 @@
 import { annuity } from "../features";
 import type { ExistingLoan, LoanRequest } from "../types";
 
-export const RULE_ENGINE_VERSION = "pdn-2026.10.10";
+export const RULE_ENGINE_VERSION = "pdn-2026.10.11";
 export const BRV_UZS = 440_000; // базовая расчётная величина from 1 Sep 2026 – update when it changes
 export const BRV_EFFECTIVE_FROM = "2026-09-01";
 export const PDN_CAP = 0.5;
