@@ -26,6 +26,16 @@ export function runIntegrityChecks(docs: ParsedDocument[], txs: Transaction[], m
     else if (d.transactions.length) checks.push({ id: `balance_chain:${d.id}`, title: `Running balance reconciles (${d.fileName})`, severity: "info", passed: true, detail: "No balance column to reconcile.", evidence: [] });
   }
 
+  // 1b. direction safety net: rows whose credit/debit direction had to be assumed inflate income
+  for (const d of statements) {
+    const assumed = d.assumedSignRows ?? 0;
+    if (!d.transactions.length) continue;
+    const share = assumed / d.transactions.length;
+    if (assumed > 0) checks.push({ id: `direction:${d.id}`, title: `Transaction direction is determinable (${d.fileName})`, severity: share > 0.2 || assumed >= 10 ? "high" : "medium", passed: false,
+      detail: `${assumed} of ${d.transactions.length} rows have no debit/credit, type or balance information and were counted as inflows — income may be overstated. Ask for an export with a type or balance column; refer, do not approve on this figure.`,
+      evidence: d.transactions.filter((t) => t.categoryReason === "direction assumed (credit)").slice(0, 5).map((t) => t.id) });
+  }
+
   // 2. exact duplicates
   const seen = new Map<string, string>(); const dups: Transaction[] = [];
   for (const t of txs) {

@@ -48,6 +48,7 @@ export interface ParsedDocument {
   warnings: string[];
   textSample?: string;
   ocr?: { confidence: number; words: number; langs: string[]; ms: number };
+  assumedSignRows?: number;   // rows whose direction (credit/debit) could not be determined and was assumed
   parseMs: number;
 }
 

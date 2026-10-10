@@ -100,7 +100,7 @@ function numericColumns(lines: Line[], headerIndex: number): { right: number; co
   return clusters.filter((c) => c.count >= minCount).map((c) => ({ right: c.right, count: c.count }));
 }
 
-export function parseStatementLines(docId: string, lines: Line[]): { txs: Transaction[]; holder?: string; cardMask?: string; warnings: string[] } {
+export function parseStatementLines(docId: string, lines: Line[]): { txs: Transaction[]; holder?: string; cardMask?: string; warnings: string[]; assumedSignRows: number } {
   const warnings: string[] = [];
   const { headerIndex, order } = detectHeader(lines);
   const clusters = numericColumns(lines, headerIndex);
@@ -125,6 +125,8 @@ export function parseStatementLines(docId: string, lines: Line[]): { txs: Transa
     if (!cardMask) { const m = text.match(/(\d{4})\s?\*{4}\s?\*{4}\s?(\d{4})/); if (m) cardMask = `${m[1]} **** **** ${m[2]}`; }
     const date = parseDate(text);
     if (!date || i === headerIndex) continue;
+    if (headerIndex >= 0 && i < headerIndex) continue;                       // meta lines above the table (period, dates)
+    if ((text.match(/\b(20\d{2}[-./]\d{1,2}[-./]\d{1,2}|\d{1,2}[-./]\d{1,2}[-./]20\d{2})\b/g) ?? []).length >= 2) continue;  // "Период: … — …"
     const nums: { v: number; x: number }[] = [];
     const descParts: string[] = [];
     let time: string | undefined;
@@ -157,26 +159,30 @@ export function parseStatementLines(docId: string, lines: Line[]): { txs: Transa
     rows.push({ tx: makeTx(docId, l.page, lineNo, date, desc, debit, credit, balance, time, text), amount, signed });
   }
   const unsigned = rows.filter((r) => !r.signed);
+  let assumedSignRows = 0;
   if (unsigned.length) {
     const signs = inferSignsFromBalance(rows.map((r) => ({ amount: r.amount, balance: r.tx.balance })));
+    const signedColumn = rows.some((r) => r.amount < 0);
     rows.forEach((r, i) => {
       if (r.signed) return;
       const s = signs[i];
       const a = Math.abs(r.amount);
       if (s === "credit") r.tx.credit = a; else if (s === "debit") r.tx.debit = a;
-      else { r.tx.credit = a; r.tx.categoryReason = "sign assumed (no balance chain)"; }
+      else if (signedColumn) r.tx.credit = a;
+      else { r.tx.credit = a; r.tx.categoryReason = "direction assumed (credit)"; assumedSignRows++; }
     });
     if (unsigned.length > rows.length / 2 && !haveCols) warnings.push("Debit/credit columns not found; signs inferred from the balance chain.");
   }
   if (!rows.length) warnings.push("No transaction rows recognised in this PDF.");
   else if (droppedRows > 0) warnings.push(`${droppedRows} dated line(s) had no recognisable amount and were skipped — check the amount format.`);
-  return { txs: rows.map((r) => r.tx), holder, cardMask, warnings };
+  if (assumedSignRows > 0) warnings.push(`${assumedSignRows} row(s) have no debit/credit or balance information — direction assumed as credit; the integrity check flags this.`);
+  return { txs: rows.map((r) => r.tx), holder, cardMask, warnings, assumedSignRows };
 }
 
 export async function parseStatementPdf(docId: string, fileName: string, data: ArrayBuffer): Promise<ParsedDocument> {
   const t0 = performance.now();
   const { lines, pages } = await extractLines(data);
-  const { txs, holder, cardMask, warnings } = parseStatementLines(docId, lines);
+  const { txs, holder, cardMask, warnings, assumedSignRows } = parseStatementLines(docId, lines);
   const per = periodOf(txs);
   const opening = (() => {
     const l = lines.find((x) => /(Входящий остаток|Boshlang'ich qoldiq|Opening balance)/i.test(x.text));
@@ -185,7 +191,7 @@ export async function parseStatementPdf(docId: string, fileName: string, data: A
     return nums.length ? nums[nums.length - 1] : null;
   })();
   return { id: docId, fileName, kind: "statement", mime: "application/pdf", pages, holderName: holder, cardMask,
-    periodFrom: per.from, periodTo: per.to, openingBalance: opening, transactions: txs, fields: [], warnings,
+    periodFrom: per.from, periodTo: per.to, openingBalance: opening, transactions: txs, fields: [], warnings, assumedSignRows,
     textSample: lines.slice(0, 12).map((l) => l.text).join("\n"), parseMs: Math.round(performance.now() - t0) };
 }
 

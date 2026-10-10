@@ -16,7 +16,7 @@ function cellAmount(c: Cell): number | null {
   return null;
 }
 
-export function parseTableRows(docId: string, rows: Cell[][]): { txs: Transaction[]; holder?: string; cardMask?: string; warnings: string[] } {
+export function parseTableRows(docId: string, rows: Cell[][]): { txs: Transaction[]; holder?: string; cardMask?: string; warnings: string[]; assumedSignRows: number } {
   const warnings: string[] = [];
   let holder: string | undefined, cardMask: string | undefined;
   // header detection
@@ -88,17 +88,22 @@ export function parseTableRows(docId: string, rows: Cell[][]): { txs: Transactio
   if (dropped > 0) warnings.push(`${dropped} dated row(s) had no recognisable amount and were skipped — check the amount format.`);
   if (skippedFailed > 0) warnings.push(`${skippedFailed} row(s) with a failed/cancelled status were ignored.`);
   const unsigned = out.filter((o) => !o.signed);
+  let assumedSignRows = 0;
   if (unsigned.length) {
     const signs = inferSignsFromBalance(out.map((o) => ({ amount: o.amount, balance: o.tx.balance })));
+    const signedColumn = out.some((o) => o.amount < 0);   // a signed-amount column: positives are credits by convention
     out.forEach((o, i) => {
       if (o.signed) return;
       const a = Math.abs(o.amount);
-      if (signs[i] === "credit") o.tx.credit = a; else if (signs[i] === "debit") o.tx.debit = a; else { o.tx.credit = a; }
+      if (signs[i] === "credit") o.tx.credit = a; else if (signs[i] === "debit") o.tx.debit = a;
+      else if (signedColumn) o.tx.credit = a;
+      else { o.tx.credit = a; o.tx.categoryReason = "direction assumed (credit)"; assumedSignRows++; }
     });
     if (map.debit === undefined && map.credit === undefined && map.type === undefined) warnings.push("No debit/credit or type columns: negative amounts treated as debits; other signs resolved from the balance chain, or assumed credits when there is no balance column.");
   }
   if (!out.length) warnings.push("No transaction rows recognised in this table.");
-  return { txs: out.map((o) => o.tx), holder, cardMask, warnings };
+  if (assumedSignRows > 0) warnings.push(`${assumedSignRows} row(s) have no debit/credit, type or balance information — direction assumed as credit; the integrity check flags this.`);
+  return { txs: out.map((o) => o.tx), holder, cardMask, warnings, assumedSignRows };
 }
 
 export async function parseXlsx(docId: string, fileName: string, data: ArrayBuffer): Promise<ParsedDocument> {
@@ -111,7 +116,7 @@ export async function parseXlsx(docId: string, fileName: string, data: ArrayBuff
   const per = periodOf(r.txs);
   return { id: docId, fileName, kind: "statement", mime: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", pages: 1,
     holderName: r.holder, cardMask: r.cardMask, periodFrom: per.from, periodTo: per.to, transactions: r.txs, fields: [],
-    warnings: r.warnings, textSample: rows.slice(0, 8).map((x) => (x ?? []).join(" | ")).join("\n"), parseMs: Math.round(performance.now() - t0) };
+    warnings: r.warnings, assumedSignRows: r.assumedSignRows, textSample: rows.slice(0, 8).map((x) => (x ?? []).join(" | ")).join("\n"), parseMs: Math.round(performance.now() - t0) };
 }
 
 export async function parseCsv(docId: string, fileName: string, text: string): Promise<ParsedDocument> {
@@ -127,6 +132,6 @@ export async function parseCsv(docId: string, fileName: string, text: string): P
   const r = parseTableRows(docId, rows);
   const per = periodOf(r.txs);
   return { id: docId, fileName, kind: "statement", mime: "text/csv", pages: 1, holderName: r.holder, cardMask: r.cardMask,
-    periodFrom: per.from, periodTo: per.to, transactions: r.txs, fields: [], warnings: r.warnings,
+    periodFrom: per.from, periodTo: per.to, transactions: r.txs, fields: [], warnings: r.warnings, assumedSignRows: r.assumedSignRows,
     textSample: rows.slice(0, 8).map((x) => x.join(" | ")).join("\n"), parseMs: Math.round(performance.now() - t0) };
 }
