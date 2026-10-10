@@ -1,0 +1,9 @@
+{
+ "accuracy": 0.9996183570270012,
+ "n": 10481,
+ "confusion": {
+  "p2p_out→self_transfer_out": 1,
+  "customer_p2p→self_transfer_in": 2,
+  "relative_transfer→customer_p2p": 1
+ }
+}

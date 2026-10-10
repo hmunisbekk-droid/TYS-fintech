@@ -1,0 +1,19 @@
+# generated data (regenerate with python -m synth.cli); keep summary + small samples only
+data/synthetic/transactions/
+data/synthetic/documents/
+data/synthetic/tampered/
+data/synthetic/borrowers.jsonl
+data/berka/*.asc
+data/berka/README_mirror.md
+ml/artifacts/fixture.json
+__pycache__/
+*.pyc
+.DS_Store
+apps/web/node_modules/
+apps/web/.next/
+apps/web/out/
+apps/web/next-env.d.ts
+apps/web/*.tsbuildinfo
+
+# delivery archive, not part of the repo
+*.zip

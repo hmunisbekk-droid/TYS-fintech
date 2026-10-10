@@ -1,0 +1,13 @@
+{
+ "dataset": "Berka / PKDD'99 Financial (Czech bank 1993-1998), mirrored from github.com/jlacko/berka-dataset",
+ "loans_used": 443,
+ "loans_total": 682,
+ "bad_rate": 0.09932279909706546,
+ "features": "same 18 features as ml/features.py, computed on the 12 months before each loan",
+ "cv": "5-fold stratified, out-of-fold predictions",
+ "xgb_auc": 0.9021132376395533,
+ "xgb_pr_auc": 0.5650529908913601,
+ "logreg_auc": 0.8948507632718159,
+ "pdn_only_auc": 0.7351617680565048,
+ "caveat": "Methodology check on real anonymised data from a different market and decade; not a performance claim for Uzbekistan."
+}

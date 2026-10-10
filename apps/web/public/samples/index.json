@@ -1,0 +1,215 @@
+{
+ "samples": [
+  {
+   "tag": "A",
+   "borrower_id": "B00040",
+   "title": "Sample A — Kamola Ismoilov (hairdresser)",
+   "description": "Clean file, one existing loan",
+   "applicant": "Kamola Ismoilov",
+   "application_date": "2026-09-30",
+   "requested_amount": 25000000.0,
+   "requested_term_months": 36,
+   "region": "Xorazm",
+   "activity": "Sartaroshlik xizmatlari",
+   "loans": [
+    {
+     "id": "cb0",
+     "lender": "TBC BANK",
+     "monthly_payment": 487400.0,
+     "term_months": 12,
+     "outstanding_principal": 3094900.0,
+     "days_past_due": 0,
+     "role": "borrower",
+     "source": "credit-bureau"
+    }
+   ],
+   "files": [
+    "statement.pdf",
+    "statement.xlsx",
+    "statement.csv",
+    "certificate.pdf",
+    "receipt_00_photo.jpg",
+    "receipt_01_photo.jpg"
+   ],
+   "truth_receipts": [
+    {
+     "file": "receipt_00_photo.jpg",
+     "total": 85000.0,
+     "date": "2026-03-01",
+     "inn": "342056057",
+     "receipt_no": "58332"
+    },
+    {
+     "file": "receipt_01_photo.jpg",
+     "total": 105000.0,
+     "date": "2026-01-14",
+     "inn": "372469341",
+     "receipt_no": "86370"
+    },
+    {
+     "file": "receipt_02_photo.jpg",
+     "total": 200000.0,
+     "date": "2026-02-01",
+     "inn": "398081518",
+     "receipt_no": "71303"
+    }
+   ],
+   "truth_label": 0
+  },
+  {
+   "tag": "B",
+   "borrower_id": "B00004",
+   "title": "Sample B — Gulnora Saidova (hairdresser)",
+   "description": "Two existing loans, high debt burden",
+   "applicant": "Gulnora Saidova",
+   "application_date": "2026-09-30",
+   "requested_amount": 40000000.0,
+   "requested_term_months": 48,
+   "region": "Samarqand",
+   "activity": "Sartaroshlik xizmatlari",
+   "loans": [
+    {
+     "id": "cb0",
+     "lender": "KAPITALBANK",
+     "monthly_payment": 1433000.0,
+     "term_months": 12,
+     "outstanding_principal": 7981600.0,
+     "days_past_due": 0,
+     "role": "borrower",
+     "source": "credit-bureau"
+    },
+    {
+     "id": "cb1",
+     "lender": "XALQ BANKI",
+     "monthly_payment": 2643600.0,
+     "term_months": 24,
+     "outstanding_principal": 35893400.0,
+     "days_past_due": 0,
+     "role": "borrower",
+     "source": "credit-bureau"
+    }
+   ],
+   "files": [
+    "statement.pdf",
+    "statement.xlsx",
+    "statement.csv",
+    "certificate.pdf",
+    "receipt_00_photo.jpg",
+    "receipt_01_photo.jpg"
+   ],
+   "truth_receipts": [
+    {
+     "file": "receipt_00_photo.jpg",
+     "total": 170000.0,
+     "date": "2025-12-12",
+     "inn": "333531617",
+     "receipt_no": "73900"
+    },
+    {
+     "file": "receipt_01_photo.jpg",
+     "total": 170000.0,
+     "date": "2025-11-26",
+     "inn": "360067241",
+     "receipt_no": "89380"
+    },
+    {
+     "file": "receipt_02_photo.jpg",
+     "total": 30000.0,
+     "date": "2026-04-28",
+     "inn": "312398966",
+     "receipt_no": "96170"
+    }
+   ],
+   "truth_label": 1
+  },
+  {
+   "tag": "C",
+   "borrower_id": "B00027",
+   "title": "Sample C — Madina Abdullayeva (plumber)",
+   "description": "Larger business, XLSX statement export",
+   "applicant": "Madina Abdullayeva",
+   "application_date": "2026-09-30",
+   "requested_amount": 100000000.0,
+   "requested_term_months": 60,
+   "region": "Xorazm",
+   "activity": "Santexnik va elektrik xizmatlari",
+   "loans": [
+    {
+     "id": "cb0",
+     "lender": "TBC BANK",
+     "monthly_payment": 196200.0,
+     "term_months": 36,
+     "outstanding_principal": 4705700.0,
+     "days_past_due": 12,
+     "role": "borrower",
+     "source": "credit-bureau"
+    },
+    {
+     "id": "cb1",
+     "lender": "IPOTEKA BANK",
+     "monthly_payment": 828600.0,
+     "term_months": 60,
+     "outstanding_principal": 8186500.0,
+     "days_past_due": 0,
+     "role": "borrower",
+     "source": "credit-bureau"
+    }
+   ],
+   "files": [
+    "statement.pdf",
+    "statement.xlsx",
+    "statement.csv",
+    "certificate.pdf",
+    "receipt_00_photo.jpg",
+    "receipt_01_photo.jpg"
+   ],
+   "truth_receipts": [
+    {
+     "file": "receipt_00_photo.jpg",
+     "total": 60000.0,
+     "date": "2025-12-28",
+     "inn": "318100389",
+     "receipt_no": "96604"
+    },
+    {
+     "file": "receipt_01_photo.jpg",
+     "total": 150000.0,
+     "date": "2025-11-20",
+     "inn": "373083960",
+     "receipt_no": "58758"
+    },
+    {
+     "file": "receipt_02_photo.jpg",
+     "total": 90000.0,
+     "date": "2026-06-14",
+     "inn": "333243154",
+     "receipt_no": "32673"
+    }
+   ],
+   "truth_label": 0
+  }
+ ],
+ "tampered": [
+  {
+   "file": "B00000_inflate_credit.pdf",
+   "borrower_id": "B00000",
+   "tamper_type": "inflate_credit"
+  },
+  {
+   "file": "B00001_delete_debit.pdf",
+   "borrower_id": "B00001",
+   "tamper_type": "delete_debit"
+  },
+  {
+   "file": "B00002_duplicate_row.pdf",
+   "borrower_id": "B00002",
+   "tamper_type": "duplicate_row"
+  },
+  {
+   "file": "B00003_window_dressing.pdf",
+   "borrower_id": "B00003",
+   "tamper_type": "window_dressing"
+  }
+ ],
+ "note": "All documents are synthetic (generator: synth/, seed 42). No real person is represented."
+}

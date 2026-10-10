@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="uz">
+<head>
+<meta charset="utf-8">
+<style>
+  body { margin: 0; background: #ddd; }
+  .paper { width: 380px; padding: 18px 16px 24px; background: #fff; font-family: "DejaVu Sans Mono", monospace; font-size: 12.5px; color: #111; }
+  .c { text-align: center; }
+  .b { font-weight: 700; }
+  .row { display: flex; justify-content: space-between; }
+  hr { border: 0; border-top: 1px dashed #333; margin: 6px 0; }
+  .big { font-size: 15px; }
+  .qr { margin: 10px auto 0; width: 110px; height: 110px; display: block; }
+</style>
+</head>
+<body>
+<div class="paper">
+  <div class="c b big">{{ shop }}</div>
+  <div class="c">{{ address }}</div>
+  <div class="c">STIR/INN: {{ inn }}</div>
+  <div class="c">{{ l_receipt }} № {{ receipt_no }}</div>
+  <hr>
+  <div class="row"><span>{{ l_date }}</span><span>{{ date }} {{ time }}</span></div>
+  <div class="row"><span>{{ l_cashier }}</span><span>{{ cashier }}</span></div>
+  <hr>
+  {% for it in items %}
+  <div>{{ it.name }}</div>
+  <div class="row"><span>{{ it.qty }} x {{ it.price }}</span><span>{{ it.total }}</span></div>
+  {% endfor %}
+  <hr>
+  <div class="row b big"><span>{{ l_total }}</span><span>{{ total }}</span></div>
+  <div class="row"><span>{{ l_paid }} ({{ pay_method }})</span><span>{{ total }}</span></div>
+  <div class="row"><span>QQS 12%</span><span>{{ vat }}</span></div>
+  <hr>
+  <div class="c">FM: {{ fm }} &nbsp; FP: {{ fp }}</div>
+  {% if qr %}<img class="qr" src="data:image/png;base64,{{ qr }}">{% endif %}
+  <div class="c">ofd.soliq.uz</div>
+  <div class="c">{{ l_thanks }}</div>
+</div>
+</body>
+</html>

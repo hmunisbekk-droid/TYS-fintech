@@ -1,0 +1,213 @@
+{
+ "n_train": 1500,
+ "n_test": 500,
+ "default_rate_train": 0.11133333333333334,
+ "default_rate_test": 0.088,
+ "xgb": {
+  "auc": 0.9654106858054226,
+  "pr_auc": 0.7575074481778804,
+  "brier": 0.04214390367269516,
+  "auc_train": 0.9887696475016958,
+  "calibration": [
+   {
+    "lo": 0.0,
+    "hi": 0.1,
+    "n": 434,
+    "mean_pred": 0.009465670213103294,
+    "frac_pos": 0.027649769585253458
+   },
+   {
+    "lo": 0.1,
+    "hi": 0.2,
+    "n": 12,
+    "mean_pred": 0.14927907288074493,
+    "frac_pos": 0.16666666666666666
+   },
+   {
+    "lo": 0.2,
+    "hi": 0.30000000000000004,
+    "n": 8,
+    "mean_pred": 0.26239511370658875,
+    "frac_pos": 0.0
+   },
+   {
+    "lo": 0.30000000000000004,
+    "hi": 0.4,
+    "n": 5,
+    "mean_pred": 0.34607619047164917,
+    "frac_pos": 0.2
+   },
+   {
+    "lo": 0.4,
+    "hi": 0.5,
+    "n": 7,
+    "mean_pred": 0.44703951478004456,
+    "frac_pos": 0.42857142857142855
+   },
+   {
+    "lo": 0.5,
+    "hi": 0.6000000000000001,
+    "n": 5,
+    "mean_pred": 0.559589684009552,
+    "frac_pos": 0.4
+   },
+   {
+    "lo": 0.6000000000000001,
+    "hi": 0.7000000000000001,
+    "n": 7,
+    "mean_pred": 0.6313933730125427,
+    "frac_pos": 0.7142857142857143
+   },
+   {
+    "lo": 0.7000000000000001,
+    "hi": 0.8,
+    "n": 3,
+    "mean_pred": 0.7624990344047546,
+    "frac_pos": 1.0
+   },
+   {
+    "lo": 0.8,
+    "hi": 0.9,
+    "n": 10,
+    "mean_pred": 0.8612625002861023,
+    "frac_pos": 0.7
+   },
+   {
+    "lo": 0.9,
+    "hi": 1.0,
+    "n": 9,
+    "mean_pred": 0.9578323364257812,
+    "frac_pos": 1.0
+   }
+  ]
+ },
+ "logreg_baseline": {
+  "auc": 0.9628688197767145,
+  "pr_auc": 0.7690345833982185
+ },
+ "pdn_only_auc": 0.9482157097288676,
+ "feature_importance": [
+  {
+   "feature": "pdn_total",
+   "gain": 0.33729326725006104
+  },
+  {
+   "feature": "log_income",
+   "gain": 0.12907542288303375
+  },
+  {
+   "feature": "new_pmt_ratio",
+   "gain": 0.0918150544166565
+  },
+  {
+   "feature": "balance_floor_ratio",
+   "gain": 0.07048460841178894
+  },
+  {
+   "feature": "min_month_ratio",
+   "gain": 0.06535450369119644
+  },
+  {
+   "feature": "income_cv",
+   "gain": 0.05806862562894821
+  },
+  {
+   "feature": "top5_payer_share",
+   "gain": 0.03515543416142464
+  },
+  {
+   "feature": "balance_end_ratio",
+   "gain": 0.032231565564870834
+  },
+  {
+   "feature": "dsr_detected",
+   "gain": 0.02725578099489212
+  },
+  {
+   "feature": "zero_months",
+   "gain": 0.02591967023909092
+  },
+  {
+   "feature": "income_trend",
+   "gain": 0.025078170001506805
+  },
+  {
+   "feature": "payers_per_month",
+   "gain": 0.02265310101211071
+  },
+  {
+   "feature": "supplier_share",
+   "gain": 0.020950935781002045
+  },
+  {
+   "feature": "atm_cash_share",
+   "gain": 0.01925175078213215
+  },
+  {
+   "feature": "nonbiz_share",
+   "gain": 0.018488191068172455
+  },
+  {
+   "feature": "biz_share",
+   "gain": 0.011632037349045277
+  },
+  {
+   "feature": "ambiguous_share",
+   "gain": 0.009291869588196278
+  },
+  {
+   "feature": "months_observed",
+   "gain": 0.0
+  }
+ ],
+ "hyperparameters": {
+  "n_estimators": 300,
+  "max_depth": 3,
+  "learning_rate": 0.05,
+  "min_child_weight": 5,
+  "reg_lambda": 2.0,
+  "monotone_constraints": {
+   "log_income": -1,
+   "biz_share": 0,
+   "income_cv": 1,
+   "income_trend": -1,
+   "min_month_ratio": -1,
+   "zero_months": 1,
+   "nonbiz_share": 0,
+   "ambiguous_share": 1,
+   "top5_payer_share": 1,
+   "payers_per_month": -1,
+   "dsr_detected": 1,
+   "balance_floor_ratio": -1,
+   "balance_end_ratio": -1,
+   "atm_cash_share": 0,
+   "supplier_share": 0,
+   "new_pmt_ratio": 1,
+   "pdn_total": 1,
+   "months_observed": 0
+  }
+ },
+ "training_data": "synthetic (data/synthetic, see summary.json); categories are ground-truth labels",
+ "caveat": "Trained and evaluated on a declared synthetic population. AUC on synthetic data measures that the pipeline learns the declared affordability structure, not real-world performance. Retrain on bank history inside the perimeter during the pilot.",
+ "trained_at": "2026-10-10 14:49:55",
+ "operating_points": [
+  {
+   "threshold": 0.15,
+   "precision": 0.5,
+   "recall": 0.6818181818181818,
+   "flagged_share": 0.12
+  },
+  {
+   "threshold": 0.25,
+   "precision": 0.5882352941176471,
+   "recall": 0.6818181818181818,
+   "flagged_share": 0.102
+  },
+  {
+   "threshold": 0.4,
+   "precision": 0.7073170731707317,
+   "recall": 0.6590909090909091,
+   "flagged_share": 0.082
+  }
+ ]
+}

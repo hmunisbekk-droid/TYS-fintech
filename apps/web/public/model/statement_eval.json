@@ -1,0 +1,456 @@
+{
+ "statements": {
+  "n": 60,
+  "rows_exact": 60,
+  "chain_pass": 60,
+  "mean_ms": 1641,
+  "details": [
+   {
+    "borrower": "B00000",
+    "rows_truth": 1422,
+    "rows_parsed": 1422,
+    "chain_pass": true,
+    "ms": 1775
+   },
+   {
+    "borrower": "B00001",
+    "rows_truth": 5715,
+    "rows_parsed": 5715,
+    "chain_pass": true,
+    "ms": 3241
+   },
+   {
+    "borrower": "B00002",
+    "rows_truth": 668,
+    "rows_parsed": 668,
+    "chain_pass": true,
+    "ms": 1219
+   },
+   {
+    "borrower": "B00003",
+    "rows_truth": 532,
+    "rows_parsed": 532,
+    "chain_pass": true,
+    "ms": 1249
+   },
+   {
+    "borrower": "B00004",
+    "rows_truth": 1346,
+    "rows_parsed": 1346,
+    "chain_pass": true,
+    "ms": 1726
+   },
+   {
+    "borrower": "B00005",
+    "rows_truth": 686,
+    "rows_parsed": 686,
+    "chain_pass": true,
+    "ms": 1232
+   },
+   {
+    "borrower": "B00006",
+    "rows_truth": 604,
+    "rows_parsed": 604,
+    "chain_pass": true,
+    "ms": 1226
+   },
+   {
+    "borrower": "B00007",
+    "rows_truth": 1834,
+    "rows_parsed": 1834,
+    "chain_pass": true,
+    "ms": 1735
+   },
+   {
+    "borrower": "B00008",
+    "rows_truth": 537,
+    "rows_parsed": 537,
+    "chain_pass": true,
+    "ms": 1217
+   },
+   {
+    "borrower": "B00009",
+    "rows_truth": 577,
+    "rows_parsed": 577,
+    "chain_pass": true,
+    "ms": 1218
+   },
+   {
+    "borrower": "B00010",
+    "rows_truth": 1053,
+    "rows_parsed": 1053,
+    "chain_pass": true,
+    "ms": 1219
+   },
+   {
+    "borrower": "B00011",
+    "rows_truth": 541,
+    "rows_parsed": 541,
+    "chain_pass": true,
+    "ms": 1216
+   },
+   {
+    "borrower": "B00012",
+    "rows_truth": 729,
+    "rows_parsed": 729,
+    "chain_pass": true,
+    "ms": 1221
+   },
+   {
+    "borrower": "B00013",
+    "rows_truth": 704,
+    "rows_parsed": 704,
+    "chain_pass": true,
+    "ms": 1231
+   },
+   {
+    "borrower": "B00014",
+    "rows_truth": 531,
+    "rows_parsed": 531,
+    "chain_pass": true,
+    "ms": 1232
+   },
+   {
+    "borrower": "B00015",
+    "rows_truth": 606,
+    "rows_parsed": 606,
+    "chain_pass": true,
+    "ms": 1213
+   },
+   {
+    "borrower": "B00016",
+    "rows_truth": 626,
+    "rows_parsed": 626,
+    "chain_pass": true,
+    "ms": 1239
+   },
+   {
+    "borrower": "B00017",
+    "rows_truth": 5302,
+    "rows_parsed": 5302,
+    "chain_pass": true,
+    "ms": 3278
+   },
+   {
+    "borrower": "B00018",
+    "rows_truth": 613,
+    "rows_parsed": 613,
+    "chain_pass": true,
+    "ms": 1255
+   },
+   {
+    "borrower": "B00019",
+    "rows_truth": 629,
+    "rows_parsed": 629,
+    "chain_pass": true,
+    "ms": 1821
+   },
+   {
+    "borrower": "B00020",
+    "rows_truth": 590,
+    "rows_parsed": 590,
+    "chain_pass": true,
+    "ms": 1733
+   },
+   {
+    "borrower": "B00021",
+    "rows_truth": 619,
+    "rows_parsed": 619,
+    "chain_pass": true,
+    "ms": 1241
+   },
+   {
+    "borrower": "B00022",
+    "rows_truth": 1049,
+    "rows_parsed": 1049,
+    "chain_pass": true,
+    "ms": 1263
+   },
+   {
+    "borrower": "B00023",
+    "rows_truth": 1415,
+    "rows_parsed": 1415,
+    "chain_pass": true,
+    "ms": 1725
+   },
+   {
+    "borrower": "B00024",
+    "rows_truth": 1857,
+    "rows_parsed": 1857,
+    "chain_pass": true,
+    "ms": 1740
+   },
+   {
+    "borrower": "B00025",
+    "rows_truth": 1349,
+    "rows_parsed": 1349,
+    "chain_pass": true,
+    "ms": 1729
+   },
+   {
+    "borrower": "B00026",
+    "rows_truth": 1457,
+    "rows_parsed": 1457,
+    "chain_pass": true,
+    "ms": 1744
+   },
+   {
+    "borrower": "B00027",
+    "rows_truth": 655,
+    "rows_parsed": 655,
+    "chain_pass": true,
+    "ms": 1222
+   },
+   {
+    "borrower": "B00028",
+    "rows_truth": 5784,
+    "rows_parsed": 5784,
+    "chain_pass": true,
+    "ms": 3248
+   },
+   {
+    "borrower": "B00029",
+    "rows_truth": 1356,
+    "rows_parsed": 1356,
+    "chain_pass": true,
+    "ms": 1717
+   },
+   {
+    "borrower": "B00030",
+    "rows_truth": 818,
+    "rows_parsed": 818,
+    "chain_pass": true,
+    "ms": 1210
+   },
+   {
+    "borrower": "B00031",
+    "rows_truth": 1380,
+    "rows_parsed": 1380,
+    "chain_pass": true,
+    "ms": 1729
+   },
+   {
+    "borrower": "B00032",
+    "rows_truth": 1798,
+    "rows_parsed": 1798,
+    "chain_pass": true,
+    "ms": 1721
+   },
+   {
+    "borrower": "B00033",
+    "rows_truth": 1343,
+    "rows_parsed": 1343,
+    "chain_pass": true,
+    "ms": 1762
+   },
+   {
+    "borrower": "B00034",
+    "rows_truth": 515,
+    "rows_parsed": 515,
+    "chain_pass": true,
+    "ms": 1210
+   },
+   {
+    "borrower": "B00035",
+    "rows_truth": 993,
+    "rows_parsed": 993,
+    "chain_pass": true,
+    "ms": 1739
+   },
+   {
+    "borrower": "B00036",
+    "rows_truth": 614,
+    "rows_parsed": 614,
+    "chain_pass": true,
+    "ms": 1221
+   },
+   {
+    "borrower": "B00037",
+    "rows_truth": 5517,
+    "rows_parsed": 5517,
+    "chain_pass": true,
+    "ms": 3231
+   },
+   {
+    "borrower": "B00038",
+    "rows_truth": 5785,
+    "rows_parsed": 5785,
+    "chain_pass": true,
+    "ms": 3259
+   },
+   {
+    "borrower": "B00039",
+    "rows_truth": 611,
+    "rows_parsed": 611,
+    "chain_pass": true,
+    "ms": 1741
+   },
+   {
+    "borrower": "B00040",
+    "rows_truth": 1281,
+    "rows_parsed": 1281,
+    "chain_pass": true,
+    "ms": 1752
+   },
+   {
+    "borrower": "B00041",
+    "rows_truth": 522,
+    "rows_parsed": 522,
+    "chain_pass": true,
+    "ms": 1215
+   },
+   {
+    "borrower": "B00042",
+    "rows_truth": 1106,
+    "rows_parsed": 1106,
+    "chain_pass": true,
+    "ms": 1715
+   },
+   {
+    "borrower": "B00043",
+    "rows_truth": 757,
+    "rows_parsed": 757,
+    "chain_pass": true,
+    "ms": 1222
+   },
+   {
+    "borrower": "B00044",
+    "rows_truth": 5967,
+    "rows_parsed": 5967,
+    "chain_pass": true,
+    "ms": 3251
+   },
+   {
+    "borrower": "B00045",
+    "rows_truth": 593,
+    "rows_parsed": 593,
+    "chain_pass": true,
+    "ms": 1223
+   },
+   {
+    "borrower": "B00046",
+    "rows_truth": 1405,
+    "rows_parsed": 1405,
+    "chain_pass": true,
+    "ms": 1724
+   },
+   {
+    "borrower": "B00047",
+    "rows_truth": 423,
+    "rows_parsed": 423,
+    "chain_pass": true,
+    "ms": 1232
+   },
+   {
+    "borrower": "B00048",
+    "rows_truth": 1477,
+    "rows_parsed": 1477,
+    "chain_pass": true,
+    "ms": 1723
+   },
+   {
+    "borrower": "B00049",
+    "rows_truth": 1143,
+    "rows_parsed": 1143,
+    "chain_pass": true,
+    "ms": 1720
+   },
+   {
+    "borrower": "B00050",
+    "rows_truth": 1955,
+    "rows_parsed": 1955,
+    "chain_pass": true,
+    "ms": 1718
+   },
+   {
+    "borrower": "B00051",
+    "rows_truth": 603,
+    "rows_parsed": 603,
+    "chain_pass": true,
+    "ms": 1241
+   },
+   {
+    "borrower": "B00052",
+    "rows_truth": 557,
+    "rows_parsed": 557,
+    "chain_pass": true,
+    "ms": 1224
+   },
+   {
+    "borrower": "B00053",
+    "rows_truth": 718,
+    "rows_parsed": 718,
+    "chain_pass": true,
+    "ms": 1223
+   },
+   {
+    "borrower": "B00054",
+    "rows_truth": 1802,
+    "rows_parsed": 1802,
+    "chain_pass": true,
+    "ms": 1730
+   },
+   {
+    "borrower": "B00055",
+    "rows_truth": 1318,
+    "rows_parsed": 1318,
+    "chain_pass": true,
+    "ms": 1719
+   },
+   {
+    "borrower": "B00056",
+    "rows_truth": 669,
+    "rows_parsed": 669,
+    "chain_pass": true,
+    "ms": 1222
+   },
+   {
+    "borrower": "B00057",
+    "rows_truth": 1098,
+    "rows_parsed": 1098,
+    "chain_pass": true,
+    "ms": 1729
+   },
+   {
+    "borrower": "B00058",
+    "rows_truth": 518,
+    "rows_parsed": 518,
+    "chain_pass": true,
+    "ms": 1222
+   },
+   {
+    "borrower": "B00059",
+    "rows_truth": 1377,
+    "rows_parsed": 1377,
+    "chain_pass": true,
+    "ms": 1733
+   }
+  ],
+  "rows_exact_rate": 1.0,
+  "chain_pass_rate": 1.0
+ },
+ "tampered": {
+  "n": 40,
+  "detected": 40,
+  "by_type": {
+   "inflate_credit": {
+    "n": 10,
+    "detected": 10
+   },
+   "delete_debit": {
+    "n": 10,
+    "detected": 10
+   },
+   "duplicate_row": {
+    "n": 10,
+    "detected": 10
+   },
+   "window_dressing": {
+    "n": 10,
+    "detected": 10
+   }
+  },
+  "recall": 1.0
+ },
+ "note": "Synthetic statements rendered by headless Chromium (two layouts, RU and UZ labels), parsed by the app's pdf.js pipeline; tampered variants from synth/tamper.py."
+}

@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<title>Выписка по карте</title>
+<style>
+  @page { size: A4; margin: 14mm 12mm; }
+  body { font-family: "DejaVu Sans", Arial, sans-serif; font-size: 9.5pt; color: #111; }
+  .hdr { display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 2px solid {{ accent }}; padding-bottom: 6px; margin-bottom: 8px; }
+  .brand { font-size: 15pt; font-weight: 700; color: {{ accent }}; letter-spacing: .5px; }
+  .meta td { padding: 1px 10px 1px 0; }
+  table.tx { width: 100%; border-collapse: collapse; margin-top: 8px; }
+  table.tx th { background: #f1f3f6; text-align: left; padding: 4px 5px; border-bottom: 1px solid #c9ced6; font-weight: 600; }
+  table.tx td { padding: 3px 5px; border-bottom: 1px solid #e6e9ee; white-space: nowrap; }
+  td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
+  .tot { margin-top: 8px; font-weight: 600; }
+  .foot { margin-top: 10px; font-size: 8pt; color: #666; }
+</style>
+</head>
+<body>
+<div class="hdr">
+  <div>
+    <div class="brand">{{ bank_name }}</div>
+    <div>{{ title }}</div>
+  </div>
+  <table class="meta">
+    <tr><td>{{ l_holder }}:</td><td><b>{{ holder }}</b></td></tr>
+    <tr><td>{{ l_card }}:</td><td>{{ card_mask }}</td></tr>
+    <tr><td>{{ l_period }}:</td><td>{{ period_from }} — {{ period_to }}</td></tr>
+    <tr><td>{{ l_currency }}:</td><td>UZS</td></tr>
+  </table>
+</div>
+<div>{{ l_opening }}: <b>{{ opening_balance }}</b></div>
+<table class="tx">
+  <thead>
+    <tr><th>{{ l_date }}</th><th>{{ l_time }}</th><th>{{ l_desc }}</th><th class="num">{{ l_debit }}</th><th class="num">{{ l_credit }}</th><th class="num">{{ l_balance }}</th></tr>
+  </thead>
+  <tbody>
+  {% for t in rows %}
+    <tr><td>{{ t.date }}</td><td>{{ t.time }}</td><td>{{ t.description }}</td><td class="num">{{ t.debit }}</td><td class="num">{{ t.credit }}</td><td class="num">{{ t.balance }}</td></tr>
+  {% endfor %}
+  </tbody>
+</table>
+<div class="tot">{{ l_total_debit }}: {{ total_debit }} &nbsp;&nbsp; {{ l_total_credit }}: {{ total_credit }} &nbsp;&nbsp; {{ l_closing }}: {{ closing_balance }}</div>
+<div class="foot">{{ footer }}</div>
+</body>
+</html>

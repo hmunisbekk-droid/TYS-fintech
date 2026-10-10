@@ -1,0 +1,34 @@
+{
+ "n": 60,
+ "total_ok": 57,
+ "inn_ok": 60,
+ "date_ok": 58,
+ "receipt_no_ok": 59,
+ "mean_conf": 81.9,
+ "mean_ms": 1600.4,
+ "misses": [
+  {
+   "file": "receipt_01_photo.jpg",
+   "truth": 165000.0,
+   "ocr": "165099",
+   "conf": "74"
+  },
+  {
+   "file": "receipt_00_photo.jpg",
+   "truth": 162000.0,
+   "ocr": "162900",
+   "conf": "78"
+  },
+  {
+   "file": "receipt_01_photo.jpg",
+   "truth": 30000.0,
+   "ocr": "30009",
+   "conf": "71"
+  }
+ ],
+ "total_ok_rate": 0.95,
+ "inn_ok_rate": 1.0,
+ "date_ok_rate": 0.9667,
+ "receipt_no_ok_rate": 0.9833,
+ "note": "Synthetic receipts rendered to PNG, then camera-augmented (perspective, rotation, lighting, blur, JPEG). Measured through the real app with tesseract.js uzb+rus+eng."
+}

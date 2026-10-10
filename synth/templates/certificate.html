@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="uz">
+<head>
+<meta charset="utf-8">
+<style>
+  @page { size: A4; margin: 18mm; }
+  body { font-family: "DejaVu Sans", Arial, sans-serif; color: #111; font-size: 11pt; }
+  .top { text-align: center; }
+  .top h1 { font-size: 14pt; margin: 6px 0; }
+  .box { border: 1.5px solid #2a5a3b; padding: 16px 20px; margin-top: 14px; }
+  table td { padding: 4px 12px 4px 0; vertical-align: top; }
+  .qr { width: 120px; height: 120px; }
+  .note { font-size: 9pt; color: #555; margin-top: 16px; }
+</style>
+</head>
+<body>
+<div class="top">
+  <div>O'ZBEKISTON RESPUBLIKASI SOLIQ QO'MITASI</div>
+  <h1>O'ZINI O'ZI BAND QILGAN SHAXS SIFATIDA RO'YXATDAN O'TGANLIK TO'G'RISIDA MA'LUMOTNOMA</h1>
+  <div>(synthetic specimen for software testing — not a government document)</div>
+</div>
+<div class="box">
+  <table>
+    <tr><td>F.I.Sh.:</td><td><b>{{ holder }}</b></td></tr>
+    <tr><td>JShShIR (PINFL):</td><td>{{ pinfl }}</td></tr>
+    <tr><td>Faoliyat turi:</td><td>{{ activity }}</td></tr>
+    <tr><td>Hudud:</td><td>{{ region }}</td></tr>
+    <tr><td>Ro'yxatdan o'tgan sana:</td><td>{{ since }}</td></tr>
+    <tr><td>Holati:</td><td><b>FAOL</b></td></tr>
+    <tr><td>Ma'lumotnoma raqami:</td><td>{{ cert_no }}</td></tr>
+  </table>
+  {% if qr %}<img class="qr" src="data:image/png;base64,{{ qr }}">{% endif %}
+</div>
+<div class="note">Sintetik hujjat. Daromad synthetic generator, seed {{ seed }}.</div>
+</body>
+</html>
