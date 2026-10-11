@@ -41,6 +41,7 @@ export default function CasePage() {
   const [coIncome, setCoIncome] = useState(0);
   const [useMedian, setUseMedian] = useState(false);
   const [docs, setDocs] = useState<ParsedDocument[]>([]);
+  const [sampleUrls, setSampleUrls] = useState<Record<string, string>>({});   // sample file name → original file, so the jury can open it next to the result
   const [busy, setBusy] = useState<string | null>(null);
   const [progress, setProgress] = useState("");
   const [over, setOver] = useState(false);
@@ -106,6 +107,9 @@ export default function CasePage() {
     setRequest((r) => ({ ...r, amount: s.requested_amount, term_months: s.requested_term_months }));
     setLoans(s.loans);
     const want = [useXlsx ? "statement.xlsx" : "statement.pdf", "certificate.pdf", "receipt_00_photo.jpg"].filter((f) => s.files.includes(f));
+    const urls: Record<string, string> = {};
+    for (const f of s.files) urls[`${s.tag}_${f}`] = `/samples/${s.tag}/${f}`;
+    setSampleUrls(urls);
     const files = await Promise.all(want.map((f) => fetchAsFile(`/samples/${s.tag}/${f}`, `${s.tag}_${f}`)));
     await addFiles(files);
   };
@@ -114,11 +118,13 @@ export default function CasePage() {
     setDocs([]); setLoans([]); setDecision(null); setApplicant(""); setCoIncome(0);
     setAppDate("2026-09-30");
     setRequest((r) => ({ ...r, amount: 25_000_000, term_months: 24 }));
+    setSampleUrls({ [file]: `/samples/tampered/${file}` });
     const f = await fetchAsFile(`/samples/tampered/${file}`, file);
     await addFiles([f]);
   };
   const clearCase = async () => {
     setDocs([]); setLoans([]); setDecision(null); setApplicant(""); setCoIncome(0); setReason(""); setEvidence(null);
+    setSampleUrls({});
     setAppDate(today()); setRequest({ amount: 25_000_000, term_months: 24, annual_rate: 0.28, product: "express" }); setUseMedian(false);
     log.current = new AuditLog(); lastRunHash.current = "";
     await log.current.append("case_created", { ts: Date.now() }, "New case opened in browser");
@@ -229,7 +235,9 @@ export default function CasePage() {
             <div key={d.id} style={{ marginTop: ".7rem", borderTop: "1px solid var(--border)", paddingTop: ".5rem" }}>
               <div className="row" style={{ justifyContent: "space-between" }}>
                 <div><b>{d.fileName}</b> <span className={`tag ${d.kind === "unknown" ? "bad" : "info"}`}>{d.kind}</span> <span className="muted small">{d.pages ? `${d.pages} p · ` : ""}{d.parseMs} ms{d.ocr ? ` · OCR conf ${(d.ocr.confidence * 100).toFixed(0)}%, ${d.ocr.words} words` : ""}</span></div>
-                <button className="btn small" onClick={() => removeDoc(d.id)}>remove</button>
+                <span>{sampleUrls[d.fileName] && <a className="btn small" href={sampleUrls[d.fileName]} target="_blank" rel="noreferrer" style={{ marginRight: ".4rem" }}>open original</a>}
+                {sampleUrls[d.fileName.replace(/\.pdf$/, ".xlsx")] && d.kind === "statement" && <a className="btn small" href={sampleUrls[d.fileName.replace(/\.pdf$/, ".xlsx")]} target="_blank" rel="noreferrer" style={{ marginRight: ".4rem" }}>same statement as Excel</a>}
+                <button className="btn small" onClick={() => removeDoc(d.id)}>remove</button></span>
               </div>
               {d.kind === "statement" && <div className="small">{d.transactions.length} transactions · {d.periodFrom} → {d.periodTo}{d.holderName ? ` · holder ${d.holderName}` : ""}{d.cardMask ? ` · ${d.cardMask}` : ""}</div>}
               {d.fields.length > 0 && (
