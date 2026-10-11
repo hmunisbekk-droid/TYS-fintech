@@ -4,7 +4,7 @@ import "./globals.css";
 
 export const metadata: Metadata = {
   title: "Daromad — Income Evidence Engine",
-  description: "Regulation-native income evidence and debt-burden (ПДН) assessment for thin-file borrowers. Runs entirely in the browser.",
+  description: "Regulation-native income evidence and debt-burden (DBR) assessment for thin-file borrowers. Runs entirely in the browser.",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

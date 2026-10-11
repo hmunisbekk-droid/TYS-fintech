@@ -35,7 +35,7 @@ with sync_playwright() as p:
     results["sample_a_seconds"] = round(time.time() - t0, 1)
     body = page.inner_text("body")
     results["memo_verified"] = "0 unsourced" in body
-    results["has_pdn"] = "ПДН" in body
+    results["has_pdn"] = "DBR" in body
     results["ocr_fields"] = "total" in body and "inn" in body
     page.screenshot(path=str(shots / "02_case_A_full.png"), full_page=True)
     # slider what-if: push amount to 100M and check the recommendation changes text

@@ -64,8 +64,8 @@ export function buildMemo(a: { inp: CaseInput; months: string[]; series: Monthly
     `distinct paying customers per month ${F("payers", a.features.payers_per_month, a.features.payers_per_month.toFixed(1), stmtSrc)}.`, sources: [stmtSrc] });
   sections.push(p2);
 
-  // 3. Existing obligations and ПДН
-  const p3: MemoSection = { title: "3. Debt-burden ratio (ПДН)", paragraphs: [] };
+  // 3. Existing obligations and DBR
+  const p3: MemoSection = { title: "3. Debt-burden ratio (DBR)", paragraphs: [] };
   const ex = a.pdn.existingPayments;
   ex.forEach((l, i) => F(`loan_label_${i}`, l.label, l.label, "credit-bureau/input"));
   p3.paragraphs.push({ text: ex.length ? `Existing obligations counted (cl.7, cl.8): ${ex.map((l) => `${l.label} ${F(`loan_${l.label}`, l.value, fmtUZS(l.value), "credit-bureau/input")}`).join("; ")}.` :
@@ -73,7 +73,7 @@ export function buildMemo(a: { inp: CaseInput; months: string[]; series: Monthly
   p3.paragraphs.push({ text: `New loan payment ${F("new_pmt", a.pdn.newPayment, fmtUZS(a.pdn.newPayment), "rules")} (annuity${a.inp.request.term_months > 36 ? ", spread per cl.8" : ""}). ` +
     `Total monthly payments ${F("total_pmt", a.pdn.totalPayments, fmtUZS(a.pdn.totalPayments), "rules")} ÷ income base ${F("income_base", a.pdn.incomeBase, fmtUZS(a.pdn.incomeBase), "rules")} ` +
     `(${a.pdn.medianUsed ? "median, cl.14" : "arithmetic mean, cl.13"}${a.pdn.monthsUsed < 12 ? ` over ${F("months_used", a.pdn.monthsUsed, String(a.pdn.monthsUsed), "cl.13")} months` : ""}) ` +
-    `= ПДН ${F("pdn", a.pdn.ratio, Number.isFinite(a.pdn.ratio) ? fmtPct(a.pdn.ratio) : "n/a", "rules")} against the ${F("cap", a.pdn.cap, fmtPct(a.pdn.cap), "cl.3")} limit (cl.3 ¶1). ` +
+    `= DBR ${F("pdn", a.pdn.ratio, Number.isFinite(a.pdn.ratio) ? fmtPct(a.pdn.ratio) : "n/a", "rules")} against the ${F("cap", a.pdn.cap, fmtPct(a.pdn.cap), "cl.3")} limit (cl.3 ¶1). ` +
     (a.pdn.exempt ? `The requirements do not apply: ${a.pdn.exemptReason} (cl.4). ` : "") +
     (a.pdn.withinQuota ? `The ratio is within ${F("quota_cap", a.pdn.quotaCap, fmtPct(a.pdn.quotaCap), "cl.3")}, so the loan is possible only inside the bank's ${F("quota_share", 15, "15", "cl.3")}% quota (cl.3 ¶3). ` : "") +
     `Maximum affordable amount at the requested term: ${F("max_afford", a.pdn.maxAffordableAmount, fmtUZS(a.pdn.maxAffordableAmount), "rules")}.`, sources: ["rules", "cl.3", "cl.13"] });

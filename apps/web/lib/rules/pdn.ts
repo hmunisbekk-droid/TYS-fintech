@@ -1,4 +1,4 @@
-// Deterministic rule engine for the debt-burden ratio (қарз юки кўрсаткичи / ПДН) of a BANK borrower.
+// Deterministic rule engine for the debt-burden ratio (DBR) of a BANK borrower.
 // Source: Regulation "on macroprudential norms set for banks and on the maximum values of payments on loans
 // (microloans) issued by them" — CBU Board decision No. 7/3 of 8 April 2025, Ministry of Justice registration
 // No. 3618 of 22 April 2025, in force 24 July 2025, as amended by Board decision No. 31/9 of 5 December 2025
@@ -11,7 +11,8 @@ import type { ExistingLoan, LoanRequest } from "../types";
 export const RULE_ENGINE_VERSION = "pdn-3618-2026.10.11";
 export const REGULATION = {
   short: "CBU Regulation No. 3618 (banks)",
-  title: "Банкларга ўрнатиладиган макропруденциал нормативлар ҳамда улар томонидан бериладиган кредитлар (микроқарзлар) бўйича тўловларнинг энг юқори қийматларига доир талаблар тўғрисидаги низом",
+  title: "Regulation on macroprudential norms set for banks and on the maximum values of payments on loans (microloans) issued by them",
+  titleOriginal: "Банкларга ўрнатиладиган макропруденциал нормативлар ҳамда улар томонидан бериладиган кредитлар (микроқарзлар) бўйича тўловларнинг энг юқори қийматларига доир талаблар тўғрисидаги низом",
   decision: "CBU Board decision No. 7/3 of 8 April 2025; registered by the Ministry of Justice on 22 April 2025, No. 3618; in force 24 July 2025; amended by Board decision No. 31/9 of 5 December 2025 (in force 21 January 2026)",
   url: "https://lex.uz/uz/docs/7491592",
 } as const;
@@ -22,22 +23,22 @@ export const MIN_INCOME_MONTHS = 6;     // cl.13: at least 6, at most 12 continu
 export const MAX_INCOME_MONTHS = 12;
 
 export const CITATIONS = {
-  definition: { id: "cl.2", text: "Debt-burden ratio = the borrower's average monthly payments on loans (microloans) ÷ average monthly income (\"қарз олувчининг кредит (микроқарзлари) бўйича ўртача ойлик тўловлари миқдорининг … ўртача ойлик даромадига нисбати\")." },
-  cap: { id: "cl.3 ¶1", text: "The ratio must not exceed 50% (\"қарз юки кўрсаткичи 50 фоиздан ошмаслиги лозим\")." },
-  quota100: { id: "cl.3 ¶3", text: "Up to 15% of the number of the bank's issued-but-outstanding loans (\"берилган, бироқ сўндирилмаган барча кредитлар (микроқарзлар) сонининг энг кўпи билан 15 фоизигача\") may be to borrowers whose ratio is up to 100% (\"уларнинг қарз юки кўрсаткичи 100 фоизгача бўлиши мумкин\"). A portfolio-level quota decided by the bank, not per application — a ratio between 50% and 100% therefore goes to the committee." },
-  newSelfEmployed: { id: "cl.3 ¶4", text: "For self-employed persons first registered (\"биринчи марта рўйхатдан ўтганига\") not more than six months before the application date (\"санадан олдинги олти ойдан ошмаган\"), loans for income-generating activity may be issued without taking the ratio into account and/or calculating it (\"инобатга олинмаслиги ва (ёки) ҳисобланмаслиги мумкин\") — again within 15% of the bank's outstanding loans. Daromad still computes the ratio and flags eligibility." },
-  exempt: { id: "cl.4", text: "The ratio requirements do not apply (\"татбиқ этилмайди\") to loans to individual entrepreneurs (\"якка тартибдаги тадбиркорларга бериладиган кредитлар\"), loans under family-entrepreneurship development programmes (\"оилавий тадбиркорликни ривожлантириш дастурлари доирасида бериладиган кредитлар\") and education loans (\"таълим кредитлари\")." },
-  recalc: { id: "cl.5", text: "The ratio must be calculated when a loan is issued or a limit raised (\"кредит (микроқарз) беришга ёки кредит (микроқарз) лимитини оширишга\"), when payments are raised or the term extended, and when a claim is bought or a loan refinanced." },
-  scope: { id: "cl.7", text: "Payments include every loan agreement with every lender (\"барча қарз берувчилар билан тузилган кредит (микроқарз) шартномаси\"), the application under review, and loans where the applicant is a co-borrower." },
-  guarantor: { id: "cl.7", text: "Loans where the applicant is a guarantor count only if, at the calculation date, payments on them are more than 30 days overdue (\"агар … 30 кундан ортиқ муддати ўтган тўловлари мавжуд бўлса\")." },
-  spreading: { id: "cl.8", text: "Annuity method (\"аннуитет усулида\"): a microloan with a term over 36 months is spread evenly over 36 months (\"36 ойдан ошган тақдирда … 36 ойга тенг миқдорда\"); other loans over 60 months over 60 (revolving lines and credit cards excluded); mortgages over 180 months over 180. Shorter terms use the contract term." },
+  definition: { id: "cl.2", text: "Debt-burden ratio = the borrower's average monthly payments on loans (microloans) ÷ average monthly income." },
+  cap: { id: "cl.3 ¶1", text: "The ratio must not exceed 50%." },
+  quota100: { id: "cl.3 ¶3", text: "Up to 15% of the number of the bank's issued-but-outstanding loans may be to borrowers whose ratio is up to 100%. A portfolio-level quota decided by the bank, not per application — a ratio between 50% and 100% therefore goes to the committee." },
+  newSelfEmployed: { id: "cl.3 ¶4", text: "For self-employed persons first registered not more than six months before the application date, loans for income-generating activity may be issued without taking the ratio into account and/or calculating it — again within 15% of the bank's outstanding loans. Daromad still computes the ratio and flags eligibility." },
+  exempt: { id: "cl.4", text: "The ratio requirements do not apply to loans to individual entrepreneurs, loans under family-entrepreneurship development programmes and education loans." },
+  recalc: { id: "cl.5", text: "The ratio must be calculated when a loan is issued or a limit raised, when payments are raised or the term extended, and when a claim is bought or a loan refinanced." },
+  scope: { id: "cl.7", text: "Payments include every loan agreement with every lender, the application under review, and loans where the applicant is a co-borrower." },
+  guarantor: { id: "cl.7", text: "Loans where the applicant is a guarantor count only if, at the calculation date, payments on them are more than 30 days overdue." },
+  spreading: { id: "cl.8", text: "Annuity method: a microloan with a term over 36 months is spread evenly over 36 months; other loans over 60 months over 60 (revolving lines and credit cards excluded); mortgages over 180 months over 180. Shorter terms use the contract term." },
   existingPayment: { id: "cl.10", text: "Average monthly payment of an existing loan = remaining principal plus interest and fees ÷ months left in the contract; overdue amounts and penalties are added." },
-  calcDate: { id: "cl.12", text: "No more than 3 working days may pass between calculating the ratio and issuing the loan (\"вақт оралиғи 3 иш кунидан ошмаслиги керак\")." },
-  income: { id: "cl.13", text: "Average monthly income is taken over a continuous period of at least 6 and at most 12 months before the application (\"камида 6 ой учун узлуксиз, бироқ 12 ойдан ошмаган муддат учун\"): one-twelfth of all income of the last 12 months, or one-sixth … one-eleventh when only 6–11 months exist." },
-  median: { id: "cl.14", text: "The bank may use the median of the monthly incomes instead of the mean when the median is lower (\"мазкур қиймат ушбу Низомнинг 13-бандида белгиланган арифметик қийматдан кичикроқ бўлса\")." },
-  accountInflows: { id: "cl.18", text: "Besides the documents of cl.19, the bank takes into account receipts credited to the bank accounts of the borrower and co-borrower (\"банк ҳисобварақларига тушган тушумларини инобатга олади\"), without counting the same income twice." },
+  calcDate: { id: "cl.12", text: "No more than 3 working days may pass between calculating the ratio and issuing the loan." },
+  income: { id: "cl.13", text: "Average monthly income is taken over a continuous period of at least 6 and at most 12 months before the application: one-twelfth of all income of the last 12 months, or one-sixth … one-eleventh when only 6–11 months exist." },
+  median: { id: "cl.14", text: "The bank may use the median of the monthly incomes instead of the mean when the median is lower." },
+  accountInflows: { id: "cl.18", text: "Besides the documents of cl.19, the bank takes into account receipts credited to the bank accounts of the borrower and co-borrower, without counting the same income twice." },
   evidence: { id: "cl.19", text: "Documented income: verified salary information, pension, funded-pension contributions, tax data including the annual income declaration confirmed by the State Tax Service, interest/dividend/rental income — net of taxes. A self-employed borrower has none of these except what shows on the account (cl.18)." },
-  otherData: { id: "cl.22", text: "The bank may use information provided by the borrower, its own information systems, credit-bureau reports and other official sources (\"ўзининг ахборот тизимлари, кредит бюроси томонидан тақдим этиладиган ахборотлар\")." },
+  otherData: { id: "cl.22", text: "The bank may use information provided by the borrower, its own information systems, credit-bureau reports and other official sources." },
 } as const;
 
 export type PdnStatus = "exempt" | "pass" | "quota" | "fail" | "no_income" | "insufficient_history";

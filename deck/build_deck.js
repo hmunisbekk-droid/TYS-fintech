@@ -106,11 +106,11 @@ const pct = (v, d = 1) => (v * 100).toFixed(d) + "%";
     s.addImage({ data: hot ? ic.FiCheck : ic.FiAlertCircle, x: 0.75, y: y + 0.14, w: 0.3, h: 0.3, objectName: `evidence icon ${i}` });
     s.addText([{ text: String(t), options: { bold: true } }, { text: `  — ${why}` }], { x: 1.2, y, w: 6.5, h: 0.58, fontSize: hot ? 13.5 : 12, color: HEX.dk1, margin: 0, isTextBox: true, valign: "middle", objectName: `evidence text ${i}` });
   });
-  tile(s, 8.3, 1.5, 4.4, 1.15, "50% limit", "ПДН limit for bank loans (cl.3); income = mean of 6–12 months of receipts (cl.13, cl.18); 50–100% only inside a 15% quota", { dark: true });
+  tile(s, 8.3, 1.5, 4.4, 1.15, "50% limit", "DBR limit for bank loans (cl.3); income = mean of 6–12 months of receipts (cl.13, cl.18); 50–100% only inside a 15% quota", { dark: true });
   tile(s, 8.3, 2.85, 4.4, 1.15, "~140,000", "projects MKBANK plans under its lending programmes in 2026 (47,975 micro-projects financed in 2025); 1,062 mahalla agents", { dark: true });
   tile(s, 8.3, 4.2, 4.4, 1.15, "60–90 min", "an officer's manual reading of 12 months of statements per application (our estimate; pilot measures it)", {});
   tile(s, 8.3, 5.55, 4.4, 1.15, "0 lines", "of official income records for ~790k registered self-employed (untaxed, unfiled, no cash register required)", {});
-  s.addText("Sources: CBU Regulation No. 3618 (Board decision 7/3, 8 Apr 2025; lex.uz/uz/docs/7491592) · spot.uz 27 Mar 2026 (MKBANK, bank's own figures) · yuz.uz (self-employed registrations, 2021) — full list in Appendix D", { x: 0.6, y: 6.75, w: 12, h: 0.3, fontSize: 9, color: HEX.accent4, margin: 0, isTextBox: true, objectName: "sources" });
+  s.addText("Sources: CBU Regulation No. 3618 (Board decision 7/3, 8 Apr 2025; lex.uz/uz/docs/7491592) · spot.uz 27 Mar 2026 (MKBANK, bank's own figures) · yuz.uz (self-employed registrations, 2021) — full list on the References slides", { x: 0.6, y: 6.75, w: 12, h: 0.3, fontSize: 9, color: HEX.accent4, margin: 0, isTextBox: true, objectName: "sources" });
 
   // 3 — what the officer gets
   pres.addSection({ title: "Product" });
@@ -118,7 +118,7 @@ const pct = (v, d = 1) => (v * 100).toFixed(d) + "%";
   s.addImage({ path: path.join(IMG, "income_pdn.png"), x: 0.6, y: 1.45, w: 8.6, h: 3.0, objectName: "screenshot income and pdn" });
   s.addImage({ path: path.join(IMG, "memo.png"), x: 0.6, y: 4.6, w: 8.6, h: 2.3, objectName: "screenshot memo" });
   const got = [["FiTrendingUp", "Regulatory income", "cl.13 mean of 6–12 months (median option, cl.14) of account receipts (cl.18); own-card transfers, loan proceeds, refunds and cash deposits excluded"],
-    ["FiBookOpen", "ПДН with citations", "36/60/180-month spreading, guarantor rule, cl.4 exemptions, 50% limit, the 50–100% quota band and the new-self-employed quota (cl.3), maximum affordable amount"],
+    ["FiBookOpen", "DBR with citations", "36/60/180-month spreading, guarantor rule, cl.4 exemptions, 50% limit, the 50–100% quota band and the new-self-employed quota (cl.3), maximum affordable amount"],
     ["FiShield", "Integrity report", "balance chain, duplicates, coverage, gaps, pre-application spikes, circular transfers, holder match"],
     ["FiCheckCircle", "Verified memo", "every number traces to its source — statement lines (click to open them), a clause, or the model; the verifier refuses unsourced numbers; hash-chained audit log"]];
   got.forEach(([icn, h, t], i) => {
@@ -135,7 +135,7 @@ const pct = (v, d = 1) => (v * 100).toFixed(d) + "%";
   s.addImage({ data: ic.FiGlobe, x: 0.8, y: 1.85, w: 0.5, h: 0.5, objectName: "globe" });
   s.addText([{ text: "Open on your laptop or phone\n", options: { fontSize: 12, color: HEX.accent6 } }, { text: SITE, options: { fontSize: 18, bold: true, color: HEX.lt1 } }], { x: 1.45, y: 1.5, w: 5.1, h: 1.2, margin: 0, isTextBox: true, valign: "middle", objectName: "url" });
   const steps = ["Load sample A — statement PDF, Soliq certificate, receipt photo parse in the tab (no server, no API)",
-    "Income series, ПДН with clause citations, maximum affordable amount; drag the slider to cross the 50% limit",
+    "Income series, DBR with clause citations, maximum affordable amount; drag the slider to cross the 50% limit",
     "Integrity checks and risk score with drivers; click any evidence link to see the statement line",
     "Memo: verifier badge shows how many numbers were checked and that none is unsourced",
     "Record the decision; export the case with its hash-chained audit log",
@@ -152,7 +152,7 @@ const pct = (v, d = 1) => (v * 100).toFixed(d) + "%";
   const comps = [["FiFileText", "1 · Intake", "pdf.js with coordinates; XLSX/CSV; tesseract.js OCR uzb+rus+eng, self-hosted; field confidence, tap-to-confirm"],
     ["FiTag", "2 · Categoriser", "multilingual rules + counterparty patterns (recurring payer → family; same mask both ways → own card)"],
     ["FiTrendingUp", "3 · Cash-flow", "12-month series; 18 features identical in TypeScript and Python (parity test)"],
-    ["FiBookOpen", "4 · Rule engine", "ПДН clause by clause (Regulation 3618): 36/60/180-month spreading, guarantor rule, cl.4 exemptions, 50% limit, 15% quota bands, back-solved amount"],
+    ["FiBookOpen", "4 · Rule engine", "DBR clause by clause (Regulation 3618): 36/60/180-month spreading, guarantor rule, cl.4 exemptions, 50% limit, 15% quota bands, back-solved amount"],
     ["FiCpu", "5 · Risk model", "XGBoost, monotone constraints, JSON trees evaluated in the browser; attributions vs portfolio median"],
     ["FiShield", "6 · Integrity", "balance chain, duplicates, coverage, gaps, round-sum spikes, circular transfers, holder match"],
     ["FiCheckCircle", "7 · Memo + audit", "template from a fact table; verifier rejects unsourced numbers; SHA-256 hash-chained log"]];
@@ -182,8 +182,8 @@ const pct = (v, d = 1) => (v * 100).toFixed(d) + "%";
     [B.xgb_auc.toFixed(3), `ROC-AUC, real bank data (Berka, ${B.loans_used} loans, 44 bad; 95% CI ≈ 0.86–0.94); ratio alone ${B.pdn_only_auc.toFixed(3)}`]];
   tiles.forEach(([v, l], i) => tile(s, 0.6 + (i % 3) * 2.45, 1.45 + Math.floor(i / 3) * 1.6, 2.3, 1.48, v, l, { vsize: 24, lsize: 9, dark: i >= 4 }));
   s.addChart(pres.ChartType.bar, [
-    { name: "Synthetic holdout", labels: ["Ratio alone (ПДН)", "Logistic regression", "Boosted trees"], values: [M.pdn_only_auc, M.logreg_baseline.auc, M.xgb.auc] },
-    { name: "Real data (Berka)", labels: ["Ratio alone (ПДН)", "Logistic regression", "Boosted trees"], values: [B.pdn_only_auc, B.logreg_auc, B.xgb_auc] }],
+    { name: "Synthetic holdout", labels: ["Ratio alone (DBR)", "Logistic regression", "Boosted trees"], values: [M.pdn_only_auc, M.logreg_baseline.auc, M.xgb.auc] },
+    { name: "Real data (Berka)", labels: ["Ratio alone (DBR)", "Logistic regression", "Boosted trees"], values: [B.pdn_only_auc, B.logreg_auc, B.xgb_auc] }],
     { x: 8.1, y: 1.45, w: 4.7, h: 3.2, barDir: "col", chartColors: [HEX.accent6, HEX.accent1], showTitle: true, title: "ROC-AUC: what the model adds over the ratio", titleFontSize: 11, titleColor: HEX.dk2, titleFontFace: "+mn-lt",
       showValue: true, dataLabelPosition: "outEnd", dataLabelFormatCode: "0.00", dataLabelFontSize: 9, dataLabelColor: HEX.dk1, dataLabelFontFace: "+mn-lt",
       valAxisMinVal: 0.5, valAxisMaxVal: 1.0, valAxisLabelFontSize: 9, valAxisLabelColor: HEX.accent4, valAxisLabelFontFace: "+mn-lt", valGridLine: { color: HEX.lt2, size: 1 },
@@ -228,13 +228,13 @@ const pct = (v, d = 1) => (v * 100).toFixed(d) + "%";
   s.addTable(costRows.map((r, i) => r.map((c, j) => ({ text: c, options: { bold: i === 0 || i === costRows.length - 1, fontSize: 10.5, color: i === 0 ? HEX.lt1 : HEX.dk1, fill: { color: i === 0 ? HEX.accent1 : i === costRows.length - 1 ? HEX.lt2 : HEX.lt1 }, align: j === 2 ? "right" : "left" } }))),
     { x: 0.6, y: 1.85, w: 6.2, colW: [2.5, 2.6, 1.1], rowH: 0.36, border: { type: "solid", color: HEX.lt2, pt: 0.5 }, objectName: "cost table" });
   s.addText("Running cost per application: zero marginal (static bundle; no API, no GPU). Optional narrative LLM on one on-prem GPU: well under 1 US cent per application.", { x: 0.6, y: 4.75, w: 6.2, h: 0.6, fontSize: 10.5, color: HEX.dk1, margin: 0, isTextBox: true, objectName: "run cost" });
-  s.addText("Timeline: month 1 shadow mode (engine runs beside the manual process; we measure minutes and agreement) · months 2–3 assisted mode (officer works from the memo) · success metrics: minutes per application, agreement with committee, override rate, ПДН audit findings, retrained model AUC on bank history.", { x: 0.6, y: 5.45, w: 6.2, h: 1.4, fontSize: 10.5, color: HEX.dk1, margin: 0, isTextBox: true, objectName: "timeline" });
+  s.addText("Timeline: month 1 shadow mode (engine runs beside the manual process; we measure minutes and agreement) · months 2–3 assisted mode (officer works from the memo) · success metrics: minutes per application, agreement with committee, override rate, DBR audit findings, retrained model AUC on bank history.", { x: 0.6, y: 5.45, w: 6.2, h: 1.4, fontSize: 10.5, color: HEX.dk1, margin: 0, isTextBox: true, objectName: "timeline" });
   s.addText("Value — the officer-hours formula (every term is a slider)", { x: 7.1, y: 1.4, w: 5.7, h: 0.4, fontSize: 14, bold: true, color: HEX.accent4, margin: 0, isTextBox: true, objectName: "value caption" });
   tile(s, 7.1, 1.85, 2.75, 1.2, "90 → 25 min", "document handling per application, before → with Daromad (assumption 1; the pilot measures it)", { vsize: 22, lsize: 9.5 });
   tile(s, 10.05, 1.85, 2.75, 1.2, "≈ 42,000 / yr", "addressable applications: 30% of MKBANK's 140,000 micro-projects (bank's own 2026 target) — those outside the cl.4-exempt family programme (assumption 2)", { vsize: 22, lsize: 8.5 });
   tile(s, 7.1, 3.2, 2.75, 1.2, "≈ 45,000 h", "officer-hours saved per year = 42,000 × 65 min ≈ 23 FTE-years at 2,000 h", { vsize: 22, lsize: 9.5, dark: true });
   tile(s, 10.05, 3.2, 2.75, 1.2, "≈ 4.1 bn UZS/yr", "23 FTE × 15M/month × 12 — officer time only; at a 10% addressable share ≈ 1.4 bn", { vsize: 20, lsize: 9.5, dark: true });
-  s.addText([{ text: "Payback: ", options: { bold: true } }, { text: "the ≈ 190M pilot itself (5 of 181 branches, 3 months) does not pay back — it measures the two assumptions. After roll-out the saving of ≈ 4.1 bn/yr repays the pilot within its first month; at a 10% addressable share, within two months. Not counted: faster time-to-decision for the borrower, fewer ПДН compliance findings, better risk selection — claimed only after the pilot measures them." }],
+  s.addText([{ text: "Payback: ", options: { bold: true } }, { text: "the ≈ 190M pilot itself (5 of 181 branches, 3 months) does not pay back — it measures the two assumptions. After roll-out the saving of ≈ 4.1 bn/yr repays the pilot within its first month; at a 10% addressable share, within two months. Not counted: faster time-to-decision for the borrower, fewer DBR compliance findings, better risk selection — claimed only after the pilot measures them." }],
     { x: 7.1, y: 4.55, w: 5.7, h: 1.5, fontSize: 10.5, color: HEX.dk1, margin: 0, isTextBox: true, objectName: "payback" });
   s.addText("Who pays: MKBANK (credit department / digital budget). Who owns: micro & family-business credit department; IT deploys; mahalla agents and loan officers use it.", { x: 7.1, y: 6.1, w: 5.7, h: 0.7, fontSize: 10.5, color: HEX.accent4, margin: 0, isTextBox: true, objectName: "owner" });
 
@@ -255,8 +255,8 @@ const pct = (v, d = 1) => (v * 100).toFixed(d) + "%";
   bullets(s, ["Week 1–2: scanned-statement OCR page by page; lexicon growth on anonymised bank descriptions; Uzbek/Russian memo templates",
     "Month 1: shadow mode in 5 branches; core-banking pull for MKBANK's own account holders; credit-bureau REST for obligations",
     "Month 2–3: assisted mode; retrain the risk model on bank history inside the perimeter; set risk bands with the bank's risk appetite; fairness review by region",
-    "After the pilot: Central Bank conversation — the same engine computes ПДН uniformly for any lender, a supervisory check at zero marginal cost",
-    "Product scope today: Ommabop 2, Express, Business Online 2 (ПДН applies) and family-programme loans (exempt from the cap, capacity still assessed)"], 7.1, 2.25, 5.5, 4.4, 11.5);
+    "After the pilot: Central Bank conversation — the same engine computes DBR uniformly for any lender, a supervisory check at zero marginal cost",
+    "Product scope today: Ommabop 2, Express, Business Online 2 (DBR applies) and family-programme loans (exempt from the cap, capacity still assessed)"], 7.1, 2.25, 5.5, 4.4, 11.5);
 
   // 10 — closing
   pres.addSection({ title: "Closing" });
@@ -265,60 +265,12 @@ const pct = (v, d = 1) => (v * 100).toFixed(d) + "%";
   s.addText([{ text: "Live:  ", options: { bold: true } }, { text: SITE + "\n" }, { text: "Repo:  ", options: { bold: true } }, { text: REPO + "\n" }, { text: "Team TYS", options: { bold: true } }],
     { x: 0.7, y: 5.0, w: 11.9, h: 1.5, fontSize: 15, color: HEX.accent6, margin: 0, isTextBox: true, objectName: "closing links" });
 
-  // Appendix
-  pres.addSection({ title: "Appendix" });
-  s = slide("CONTENT", "Appendix", "Appendix A · ПДН rule engine, clause by clause", null);
-  const cl = [["Clause", "Rule as implemented", "Where it shows"],
-    ["cl.2", "ПДН = average monthly payments on loans (microloans) ÷ average monthly income («ўртача ойлик тўловлари миқдорининг … ўртача ойлик даромадига нисбати»)", "formula panel"],
-    ["cl.3", "Ratio ≤ 50% («50 фоиздан ошмаслиги лозим»). Up to 15% of outstanding loans may carry up to 100% (amendment 31/9, 2025) — bank-level quota → committee. Self-employed registered < 6 months: income-generating loans within 15% without the ratio", "status: pass / quota / fail; cl.3 ¶4 badge"],
-    ["cl.4", "Not applicable to loans to individual entrepreneurs, family-entrepreneurship programmes and education loans («татбиқ этилмайди»)", "exemption badge"],
-    ["cl.7", "All agreements with all lenders incl. the application under review; co-borrower loans counted; guarantor loans only when > 30 days overdue («30 кундан ортиқ муддати ўтган»)", "obligations table, DPD column"],
-    ["cl.8", "Annuity spreading: microloan > 36 months → 36; other loan > 60 → 60; mortgage > 180 → 180", "per-line note"],
-    ["cl.12", "No more than 3 working days between the calculation and the issue («3 иш кунидан ошмаслиги керак»)", "case date"],
-    ["cl.13", "Average income over a continuous 6–12-month period («камида 6 ой … 12 ойдан ошмаган»): 1/12 of the last 12 months, or 1/n for 6–11", "income base, months used"],
-    ["cl.14", "The median may replace the mean when it is lower", "median switch"],
-    ["cl.18", "Receipts credited to the borrower's and co-borrower's bank accounts count as income («банк ҳисобварақларига тушган тушумларини инобатга олади»)", "statement-based income"],
-    ["cl.19", "Documented evidence: salary, pension, funded-pension contributions, tax data incl. the annual declaration, interest/dividends/rent — net of taxes", "memo section 2"]];
-  s.addTable(cl.map((r, i) => r.map((c, j) => ({ text: c, options: { bold: i === 0 || j === 0, fontSize: 9, color: i === 0 ? HEX.lt1 : HEX.dk1, fill: { color: i === 0 ? HEX.accent1 : i % 2 ? HEX.lt1 : HEX.lt2 } } }))),
-    { x: 0.6, y: 1.45, w: 12.1, colW: [0.9, 8.4, 2.8], rowH: 0.42, border: { type: "solid", color: HEX.lt2, pt: 0.5 }, objectName: "clause table" });
-  s.addText("CBU Board decision 7/3 of 8 Apr 2025, reg. No. 3618 (22 Apr 2025), in force 24 Jul 2025, amended 5 Dec 2025 (in force 21 Jan 2026) — lex.uz/uz/docs/7491592. Regulation 3205 (lex.uz 4654149) covers MFOs and pawnshops only since 24 Jul 2025 and is not used. Checked 11 Oct 2026; quotes in docs/REGULATION_QUOTES.md.", { x: 0.6, y: 6.55, w: 12, h: 0.4, fontSize: 9, color: HEX.accent4, margin: 0, isTextBox: true, objectName: "brv note" });
-
-  s = slide("CONTENT", "Appendix", "Appendix B · Failure cases, perimeter, human in the loop", null);
-  card(s, 0.6, 1.45, 6.0, 5.3, "fail card");
-  s.addText("Known failure cases (also on the Model card page)", { x: 0.8, y: 1.6, w: 5.6, h: 0.4, fontSize: 14, bold: true, color: HEX.dk2, margin: 0, isTextBox: true, objectName: "fail head" });
-  bullets(s, ["Scanned statements without a text layer: not OCR'd page by page yet — ask for the XLSX/CSV export",
-    "One signed amount column and no balance column: signs taken from keywords only",
-    "Merchant strings outside the lexicon (mixed scripts, transliteration) → default category, visible in the table",
-    "Dark or heavily skewed receipt photos: OCR confidence < 60% → fields flagged for confirmation, never guessed",
-    "Cash-only businesses: nothing to reconstruct — the memo says so; the officer attests",
-    "Synthetic-to-real gap of the risk score until retrained inside the bank; risk bands are placeholders"], 0.8, 2.1, 5.6, 4.5, 11.5);
-  card(s, 6.9, 1.45, 5.9, 5.3, "perimeter card b");
-  s.addText("Perimeter, audit, human in the loop", { x: 7.1, y: 1.6, w: 5.5, h: 0.4, fontSize: 14, bold: true, color: HEX.dk2, margin: 0, isTextBox: true, objectName: "perim head" });
-  bullets(s, ["Prototype: static site; documents are parsed in the browser and never transmitted; nothing is stored server-side",
-    "Production: same bundle on the bank's web server (Docker, no outbound network), SSO identity, audit log and cases in the bank DB",
-    "Own customers' statements pulled from core banking; uploads only for other banks' statements and wallets",
-    "Every analysis stamped with rule-engine, model and categoriser versions; hash-chained SHA-256 log; export with the case",
-    "The engine recommends; the officer decides; overrides require a reason; committee above branch limits",
-    "Personal data processed inside the bank with recorded consent; retention per bank policy; no gender or activity-type features in the model"], 7.1, 2.1, 5.5, 4.5, 11.5);
-
-  s = slide("CONTENT", "Appendix", "Appendix C · Data sources and licences", null);
-  const ds = [["Source", "Used for", "Licence / terms"],
-    ["Daromad synthetic data set (synth/, seed 42)", "training, evaluation, demo samples", "MIT, this repo; generator and parameters declared; no real person"],
-    ["Berka / PKDD'99 Financial data set (mirror github.com/jlacko/berka-dataset)", "offline methodology check", "academic challenge data, no licence stated; evaluation only, not redistributed"],
-    ["Tesseract tessdata_fast (uzb, uzb_cyrl, rus, eng); tesseract.js", "receipt OCR", "Apache 2.0"],
-    ["pdf.js; SheetJS; Next.js; React", "parsing, application", "Apache 2.0 / MIT"],
-    ["XGBoost; scikit-learn; NumPy; pandas; OpenCV; Playwright; Jinja2; qrcode", "training, rendering, evaluation", "Apache 2.0 / BSD-3 / MIT"],
-    ["CBU Regulation No. 3618 for banks (lex.uz/uz/docs/7491592)", "rule engine, citations", "public legal information"],
-    ["stat.uz wages; CBU statistics; MKBANK public pages (sponsored article, bank's own figures)", "calibration anchors, business case", "public information, cited"]];
-  s.addTable(ds.map((r, i) => r.map((c) => ({ text: c, options: { bold: i === 0, fontSize: 10.5, color: i === 0 ? HEX.lt1 : HEX.dk1, fill: { color: i === 0 ? HEX.accent1 : i % 2 ? HEX.lt1 : HEX.lt2 } } }))),
-    { x: 0.6, y: 1.45, w: 12.1, colW: [5.0, 3.0, 4.1], rowH: 0.55, border: { type: "solid", color: HEX.lt2, pt: 0.5 }, objectName: "data table" });
-  s.addText("Rules compliance: no hard-coded answers (every figure computed from uploaded documents at run time); no real personal or confidential data; all code written during the final by team TYS with LLM coding assistance (declared); deployment from the submitted repository; CI on every push.", { x: 0.6, y: 6.0, w: 12.1, h: 0.8, fontSize: 10.5, color: HEX.dk1, margin: 0, isTextBox: true, objectName: "compliance" });
-
-  // Appendix D — references (Westminster Harvard), two slides
+  pres.addSection({ title: "References" });
+  // References (Westminster Harvard), two slides after the closing slide
   const REFS = JSON.parse(fs.readFileSync(path.join(__dirname, "../docs/references.json"), "utf8"));
   const half = Math.ceil(REFS.length / 2);
   [REFS.slice(0, half), REFS.slice(half)].forEach((chunk, k) => {
-    s = slide("CONTENT", "Appendix", `Appendix D · References, Westminster Harvard (${k + 1}/2)`, null);
+    s = slide("CONTENT", "References", `References (${k + 1}/2)`, null);
     const paras = chunk.map((r) => [{ text: r.a + " " + (r.pre ? r.pre + " " : ""), options: { breakLine: false } }, { text: r.it, options: { italic: true, breakLine: false } }, { text: " " + r.post, options: { breakLine: true } }]).flat();
     s.addText(paras, { x: 0.6, y: 1.4, w: 12.1, h: 5.5, fontSize: 11, color: HEX.dk1, margin: 0, isTextBox: true, valign: "top", paraSpaceAfter: 5, objectName: `references ${k + 1}` });
   });

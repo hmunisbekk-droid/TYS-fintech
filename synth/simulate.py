@@ -39,7 +39,7 @@ CATEGORIES = [
     "rent",
     "utilities",
     "telecom",
-    "loan_repayment",      # debt service – feeds ПДН cross-check
+    "loan_repayment",      # debt service – feeds DBR cross-check
     "personal_spend",
     "atm_cash",
     "self_transfer_out",

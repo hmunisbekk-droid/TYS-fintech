@@ -26,7 +26,7 @@ export const FEATURE_LABELS: Record<FeatureName, string> = {
   atm_cash_share: "Share of spending withdrawn as cash",
   supplier_share: "Supplier payments / business revenue",
   new_pmt_ratio: "Requested loan payment / income",
-  pdn_total: "Debt-burden ratio incl. requested loan (ПДН proxy)",
+  pdn_total: "Debt-burden ratio incl. requested loan (DBR proxy)",
   months_observed: "Months of data available",
 };
 

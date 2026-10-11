@@ -32,7 +32,7 @@ FEATURE_NAMES = [
     "atm_cash_share",        # ATM withdrawals / all debits
     "supplier_share",        # supplier payments / business inflow
     "new_pmt_ratio",         # annuity payment of the requested loan / regulatory income
-    "pdn_total",             # (existing payments + new payment) / regulatory income  (regulatory ПДН proxy)
+    "pdn_total",             # (existing payments + new payment) / regulatory income  (regulatory DBR proxy)
     "months_observed",       # number of months with any transaction (≤ 12)
 ]
 

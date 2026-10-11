@@ -49,7 +49,7 @@ export default function ModelPage() {
             <div className="tscroll"><table style={{ marginTop: ".6rem" }}><thead><tr><th>Comparator</th><th className="num">ROC-AUC</th></tr></thead><tbody>
               <tr><td>Gradient-boosted trees, monotone constraints (shipped)</td><td className="num">{m.xgb.auc.toFixed(3)}</td></tr>
               <tr><td>Logistic regression on the same 18 features</td><td className="num">{m.logreg_baseline.auc.toFixed(3)}</td></tr>
-              <tr><td>Regulatory ratio alone (ПДН proxy, no model)</td><td className="num">{m.pdn_only_auc.toFixed(3)}</td></tr>
+              <tr><td>Regulatory ratio alone (DBR proxy, no model)</td><td className="num">{m.pdn_only_auc.toFixed(3)}</td></tr>
               <tr><td>Train AUC (overfit check)</td><td className="num">{m.xgb.auc_train.toFixed(3)}</td></tr>
             </tbody></table></div>
             <h3 style={{ marginTop: ".8rem" }}>Operating points</h3>

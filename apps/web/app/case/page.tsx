@@ -77,7 +77,7 @@ export default function CasePage() {
     logTimer.current = setTimeout(() => {
       lastRunHash.current = sig;
       log.current.append("analysis_run", { features: result.features, pdn: result.pdn.ratio, probability: result.probability, recommendation: result.recommendation, request, versions: result.engineVersions },
-        `Analysis: amount ${fmtUZS(request.amount)}, ПДН ${fmtPct(result.pdn.ratio)}, PD ${fmtPct(result.probability)}, ${REC_LABEL[result.recommendation].t}`).then(() => setAudit([...log.current.entries]));
+        `Analysis: amount ${fmtUZS(request.amount)}, DBR ${fmtPct(result.pdn.ratio)}, PD ${fmtPct(result.probability)}, ${REC_LABEL[result.recommendation].t}`).then(() => setAudit([...log.current.entries]));
     }, 900);
     return () => { if (logTimer.current) clearTimeout(logTimer.current); };
   }, [result, request]);
@@ -143,7 +143,7 @@ export default function CasePage() {
     if (clause) { setEvidence({ title: `${clause.id} — ${REGULATION.short}`, txs: [], text: `${clause.text}\n\nSource: ${REGULATION.decision}. ${REGULATION.url}` }); return; }
     const explain: Record<string, string> = {
       input: "Entered by the officer in section 1 (request, obligations, co-borrower income).",
-      rules: `Deterministic rule engine ${result.engineVersions.rules}: ПДН per CBU Regulation No. 3618 (banks) — cl.2, cl.3, cl.4, cl.7, cl.8, cl.12, cl.13, cl.14, cl.18, cl.19; see section 3 and the citations on each line.`,
+      rules: `Deterministic rule engine ${result.engineVersions.rules}: DBR per CBU Regulation No. 3618 (banks) — cl.2, cl.3, cl.4, cl.7, cl.8, cl.12, cl.13, cl.14, cl.18, cl.19; see section 3 and the citations on each line.`,
       model: `Risk model ${result.engineVersions.model}: gradient-boosted trees on 18 cash-flow features; drivers shown in section 4b.`,
       integrity: "Integrity checks in section 4a; each failed check lists the statement lines it is based on.",
       "credit-bureau/input": "Existing obligations as entered in section 1 (credit bureau in production).",
@@ -182,7 +182,7 @@ export default function CasePage() {
       <div className="steps">
         <span className={`s ${step(1)}`}>1 · Request &amp; obligations</span>
         <span className={`s ${stmtCount ? "done" : ""}`}>2 · Documents</span>
-        <span className={`s ${result ? "done" : ""}`}>3 · Income &amp; ПДН</span>
+        <span className={`s ${result ? "done" : ""}`}>3 · Income &amp; DBR</span>
         <span className={`s ${result ? "done" : ""}`}>4 · Integrity &amp; risk</span>
         <span className={`s ${result ? "done" : ""}`}>5 · Memo</span>
         <span className={`s ${decision ? "done" : ""}`}>6 · Decision &amp; audit</span>
@@ -264,13 +264,13 @@ export default function CasePage() {
                 </div>
               </div>
               <div>
-                <h3>ПДН — <span className={`tag ${result.pdn.status === "exempt" ? "info" : result.pdn.status === "pass" ? "good" : result.pdn.status === "quota" ? "warn" : "bad"}`}>{result.pdn.status === "exempt" ? "requirements not applicable" : result.pdn.status === "pass" ? "within 50% limit" : result.pdn.status === "quota" ? "50–100%: bank quota only" : result.pdn.status === "insufficient_history" ? "under 6 months of history" : "above the limits"}</span> <span className="muted small">{REGULATION.short}</span></h3>
+                <h3>DBR — <span className={`tag ${result.pdn.status === "exempt" ? "info" : result.pdn.status === "pass" ? "good" : result.pdn.status === "quota" ? "warn" : "bad"}`}>{result.pdn.status === "exempt" ? "requirements not applicable" : result.pdn.status === "pass" ? "within 50% limit" : result.pdn.status === "quota" ? "50–100%: bank quota only" : result.pdn.status === "insufficient_history" ? "under 6 months of history" : "above the limits"}</span> <span className="muted small">{REGULATION.short}</span></h3>
                 <div className="tscroll"><table><tbody>
                   {result.pdn.existingPayments.map((l, i) => <tr key={i}><td>{l.label} <span className="cite" title={CITATIONS[l.citation].text}>{CITATIONS[l.citation].id}</span>{l.note && <span className="muted small"> {l.note}</span>}</td><td className="num">{fmtUZS(l.value)}</td></tr>)}
                   <tr><td>Requested loan payment <span className="cite" title={request.term_months > 36 ? CITATIONS.spreading.text : CITATIONS.scope.text}>{request.term_months > 36 ? "cl.8" : "cl.7"}</span></td><td className="num">{fmtUZS(result.pdn.newPayment)}</td></tr>
                   <tr><th>Total monthly payments</th><th className="num">{fmtUZS(result.pdn.totalPayments)}</th></tr>
                   <tr><td>Income base ({result.pdn.medianUsed ? "median" : "mean"} of {result.pdn.monthsUsed} months{coIncome ? " + co-borrower" : ""}) <span className="cite" title={CITATIONS.income.text}>cl.13</span>{result.pdn.medianUsed && <span className="cite" title={CITATIONS.median.text}>cl.14</span>}</td><td className="num">{fmtUZS(result.pdn.incomeBase)}</td></tr>
-                  <tr><th>ПДН <span className="cite" title={CITATIONS.cap.text}>cl.3 ¶1</span></th><th className="num" style={{ fontSize: "1.2rem" }}>{Number.isFinite(result.pdn.ratio) ? fmtPct(result.pdn.ratio) : "n/a"}</th></tr>
+                  <tr><th>DBR <span className="cite" title={CITATIONS.cap.text}>cl.3 ¶1</span></th><th className="num" style={{ fontSize: "1.2rem" }}>{Number.isFinite(result.pdn.ratio) ? fmtPct(result.pdn.ratio) : "n/a"}</th></tr>
                 </tbody></table></div>
                 <div className="bar cap" style={{ marginTop: ".5rem" }}><i style={{ width: `${Math.min(100, (result.pdn.ratio / 1) * 100)}%`, background: result.pdn.ratio <= 0.5 ? "var(--good)" : "var(--bad)" }} /></div>
                 <div className="small muted">0% ─────────── 50% limit ─────────── 100% (15% quota ceiling)</div>

@@ -6,7 +6,7 @@ Daromad turns the documents a self-employed or family-business borrower actually
 statements (PDF / XLSX / CSV), fiscal receipts (photos), the Soliq self-employed certificate — into:
 
 1. a regulator-compliant **income figure** (CBU Regulation No. 3618 for banks: 6–12-month average of account receipts, cl.13 and cl.18, with the cl.14 median option),
-2. the **debt-burden ratio (ПДН)** with every clause cited — the 50% limit, the 50–100% quota band and the new-self-employed quota (cl.3), the cl.4 exemptions, the guarantor rule (cl.7), 36/60/180-month spreading (cl.8) — and the maximum affordable amount back-solved,
+2. the **debt-burden ratio (DBR)** with every clause cited — the 50% limit, the 50–100% quota band and the new-self-employed quota (cl.3), the cl.4 exemptions, the guarantor rule (cl.7), 36/60/180-month spreading (cl.8) — and the maximum affordable amount back-solved,
 3. an **integrity report** (balance-chain reconciliation, duplicates, coverage, pre-application inflow spikes, circular transfers, cross-document consistency),
 4. an explained **risk score** (gradient-boosted trees with monotone constraints, run in the browser),
 5. a **credit memo** in which every number is traceable to a document line and checked by a faithfulness verifier,
@@ -27,7 +27,7 @@ apps/web/        Next.js 16 app (static export). All document parsing, OCR, rule
   lib/ocr/       tesseract.js receipt OCR (self-hosted worker, core and uzb+rus+eng data in public/)
   lib/categorize.ts   multilingual rule-based transaction categoriser + counterparty patterns
   lib/features.ts     18 cash-flow features (parity-tested against ml/features.py)
-  lib/rules/pdn.ts    ПДН rule engine with clause citations
+  lib/rules/pdn.ts    DBR rule engine with clause citations
   lib/risk.ts         XGBoost JSON inference + one-at-a-time attributions
   lib/integrity.ts    integrity / plausibility checks
   lib/memo.ts         template memo, fact table, faithfulness verifier
@@ -83,7 +83,7 @@ python3 tests/statement_eval.py http://localhost:8787 ../../data/synthetic 60 pu
 Open the prototype → **New case** → *Load sample A/B/C* (synthetic borrowers) or upload **your own** statement
 (any PDF with a text layer, XLSX or CSV export) and a photo of **any receipt**. Unknown layouts fall back to
 balance-chain sign inference; low-confidence OCR fields are flagged for confirmation rather than guessed.
-Drag the *requested amount* slider to watch ПДН cross the 50% cap and the recommendation change. Record a decision
+Drag the *requested amount* slider to watch DBR cross the 50% cap and the recommendation change. Record a decision
 and export the case with its audit chain.
 
 ## Results (all produced by code in this repo, read by the Model card page)
@@ -92,11 +92,11 @@ and export the case with its audit chain.
 |---|---|---|
 | Statement parsing, 60 synthetic PDFs (2 layouts, RU/UZ labels) | row count exact on 60/60, balance chain reconciles on 60/60, ~1.6 s per 12-month PDF | `public/model/statement_eval.json` |
 | Tamper detection (inflated inflow, deleted debit, duplicated row, window dressing) | 40/40 caught (10/10 per type); 0 false positives on the 60 clean statements | `public/model/statement_eval.json` |
-| **Unseen layouts** (signed-amount RU CSV, Kirim/Chiqim XLSX, quoted EN CSV + Type column, Unicode-minus CSV, headerless CSV, Приход/Расход TSV, Payme-style wallet export with +/− type column, status column and no balance, RU bank CSV with two date columns + document-number and account columns) | 8/8 exact row counts and credit/debit totals | `public/model/ood_eval.json` (written by `tests/ood.test.ts`) |
+| **Unseen layouts** (signed-amount RU CSV, Kirim/Chiqim XLSX, quoted EN CSV + Type column, Unicode-minus CSV, headerless CSV, Russian inflow/outflow (Приход/Расход) TSV, Payme-style wallet export with +/− type column, status column and no balance, RU bank CSV with two date columns + document-number and account columns) | 8/8 exact row counts and credit/debit totals | `public/model/ood_eval.json` (written by `tests/ood.test.ts`) |
 | **Two-date-column bank PDF** (Дата операции / Дата проводки, № документа, 20-digit correspondent account, header and descriptions wrapped over two lines; 25 pages, 1,346 rows) | rows and totals exact, operation date kept on every row, balance chain intact | `tests/pdf_layout.test.ts` on `tests/fixtures/statement_twodate.pdf` (+ CSV twin) |
 | Receipt OCR on 60 camera-augmented photos (uzb+rus+eng, in-browser) | total 95%, INN 100%, date 97%, receipt № 98%, 1.6 s each | `public/model/ocr_eval.json` |
 | Transaction categoriser vs ground truth (10,481 synthetic lines) | 99.96% (synthetic vocabulary — will be lower on real data) | `public/model/categorizer_eval.json` |
-| Risk model, synthetic holdout (n=500) | ROC-AUC 0.965, PR-AUC 0.76, Brier 0.042; logistic 0.963; ПДН alone 0.948 | `public/model/metrics.json` |
+| Risk model, synthetic holdout (n=500) | ROC-AUC 0.965, PR-AUC 0.76, Brier 0.042; logistic 0.963; DBR alone 0.948 | `public/model/metrics.json` |
 | Methodology check on real anonymised bank data (Berka, 443 loans, 5-fold) | ROC-AUC 0.902 (boosted), 0.895 (logistic), 0.735 (ratio alone) | `public/model/berka_metrics.json` |
 | Memo faithfulness | 0 unsourced numbers across a 300-scenario sweep (5 borrowers × 4 products × 5 amounts × 3 terms, incl. the family-programme exemption, the 50–100% quota band, refer/decline) | `tests/engine.test.ts` |
 | Cost per application | zero marginal (static hosting, no API, no GPU) | — |

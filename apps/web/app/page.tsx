@@ -8,7 +8,7 @@ export default function Home() {
         <p className="lead">
           Daromad turns the documents a self-employed or family-business borrower actually has — card and wallet statements,
           fiscal receipts, the Soliq self-employed certificate — into a regulator-compliant 12-month income figure, a debt-burden
-          ratio (ПДН) with every clause cited, an integrity report and a credit memo in which every number traces to its source — the statement lines behind it, a regulation clause, or the model — and nothing is invented.
+          ratio (DBR) with every clause cited, an integrity report and a credit memo in which every number traces to its source — the statement lines behind it, a regulation clause, or the model — and nothing is invented.
         </p>
         <div className="row" style={{ marginTop: "1rem" }}>
           <Link className="btn primary" href="/case">Start a case</Link>
@@ -40,7 +40,7 @@ export default function Home() {
         <h2>Try it in 60 seconds</h2>
         <ol>
           <li>Open <Link href="/case">New case</Link> and click <b>Load sample A</b> (synthetic hairdresser, one existing loan) — or upload your own PDF / XLSX / CSV statement and a photo of any receipt.</li>
-          <li>Watch the statement parse, the income series build, the ПДН formula fill in, the integrity checks run and the memo assemble.</li>
+          <li>Watch the statement parse, the income series build, the DBR formula fill in, the integrity checks run and the memo assemble.</li>
           <li>Drag the <b>requested amount</b> slider: the ratio crosses 50% and the recommendation changes in real time.</li>
           <li>Approve or override; every step lands in the audit log, which you can export with the case.</li>
         </ol>

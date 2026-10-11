@@ -98,15 +98,15 @@ export function runCase(inp: CaseInput, model: RiskModel, stats: FeatureStats): 
   else if (pdn.status === "insufficient_history") { rec = "refer"; reasons.push(`Only ${pdn.monthsUsed} month(s) of income history; cl.13 requires at least 6 continuous months — committee review or more statements.`); }
   else if (pdn.status === "quota") {
     rec = "refer";
-    reasons.push(`ПДН ${fmtPct(pdn.ratio)} exceeds the ${fmtPct(pdn.cap)} limit (cl.3 ¶1) but is within ${fmtPct(pdn.quotaCap)}: possible only inside the bank's 15% quota (cl.3 ¶3) — committee decision. Maximum affordable amount at this term: ${fmtUZS(pdn.maxAffordableAmount)}.`);
+    reasons.push(`DBR ${fmtPct(pdn.ratio)} exceeds the ${fmtPct(pdn.cap)} limit (cl.3 ¶1) but is within ${fmtPct(pdn.quotaCap)}: possible only inside the bank's 15% quota (cl.3 ¶3) — committee decision. Maximum affordable amount at this term: ${fmtUZS(pdn.maxAffordableAmount)}.`);
   }
   else if (!pdn.passes) {
     rec = pdn.maxAffordableAmount > 0 ? "approve_reduced" : "decline";
-    reasons.push(`ПДН ${fmtPct(pdn.ratio)} exceeds the ${fmtPct(pdn.cap)} limit (cl.3 ¶1)${Number.isFinite(pdn.ratio) ? ` and the ${fmtPct(pdn.quotaCap)} quota ceiling (cl.3 ¶3)` : ""}. Maximum affordable amount at this term: ${fmtUZS(pdn.maxAffordableAmount)}.`);
+    reasons.push(`DBR ${fmtPct(pdn.ratio)} exceeds the ${fmtPct(pdn.cap)} limit (cl.3 ¶1)${Number.isFinite(pdn.ratio) ? ` and the ${fmtPct(pdn.quotaCap)} quota ceiling (cl.3 ¶3)` : ""}. Maximum affordable amount at this term: ${fmtUZS(pdn.maxAffordableAmount)}.`);
   } else if (band.band === "high") { rec = "refer"; reasons.push(`Risk score ${fmtPct(probability)} — above the referral threshold; committee review.`); }
   else if (band.band === "medium" || medFails.length) { rec = "approve"; reasons.push(medFails.length ? `Approve with conditions: ${medFails.map((c) => c.title).join("; ")}.` : "Elevated risk score: approve with standard monitoring."); }
-  else { rec = "approve"; reasons.push("ПДН within cap, low risk score, no integrity findings."); }
-  if (pdn.exempt) reasons.push(`ПДН requirements not applicable: ${pdn.exemptReason} (cl.4).`);
+  else { rec = "approve"; reasons.push("DBR within cap, low risk score, no integrity findings."); }
+  if (pdn.exempt) reasons.push(`DBR requirements not applicable: ${pdn.exemptReason} (cl.4).`);
   if (pdn.newSelfEmployedEligible) reasons.push("Self-employed registration is under 6 months old: eligible for issue without the ratio inside the bank's 15% quota (cl.3 ¶4) — bank-level decision.");
   if (features.months_observed < 12 && pdn.status !== "insufficient_history") reasons.push(`Only ${features.months_observed} of 12 months observed — request the missing statements before final decision.`);
   // (months_observed is registered as a fact by the memo builder so the verifier accepts it)

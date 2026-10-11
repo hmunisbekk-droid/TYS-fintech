@@ -62,7 +62,7 @@ describe("rule-based categoriser vs ground-truth labels", () => {
   });
 });
 
-describe("ПДН rule engine — CBU Regulation No. 3618 for banks (lex.uz/uz/docs/7491592)", () => {
+describe("DBR rule engine — CBU Regulation No. 3618 for banks (lex.uz/uz/docs/7491592)", () => {
   const income = Array(12).fill(5_000_000);
   const req = { amount: 30_000_000, term_months: 24, annual_rate: 0.28, product: "express" as const };
   it("computes the ratio against the 50% limit (cl.3 ¶1)", () => {
